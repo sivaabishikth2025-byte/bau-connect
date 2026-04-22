@@ -1,0 +1,10 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* { box-sizing: border-box; }
+
+body {
+  background: #F4F7FF;
+  font-family: "Century Gothic", "Futura PT", "Nunito", ui-sans-serif, system-ui, sans-serif;
+}
