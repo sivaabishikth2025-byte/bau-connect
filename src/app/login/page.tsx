@@ -74,8 +74,8 @@ export default function Login() {
         </div>
 
         {/* Title */}
-        <h1 className="text-4xl font-black text-primary text-center mb-1">BAUdate</h1>
-        <p className="text-gray-400 text-center mb-6 text-sm">Dive into meaningful connections</p>
+        <h1 className="text-4xl font-black text-primary text-center mb-1">BAU Connect</h1>
+        <p className="text-gray-400 text-center mb-6 text-sm">Campus connections for carpools, study, hangouts</p>
 
         {/* Tab switcher */}
         <div className="flex bg-[#EAF2FB] rounded-2xl p-1 mb-6">

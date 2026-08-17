@@ -5,14 +5,10 @@ import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
 import { uploadToCloudinary } from "@/lib/cloudinary";
 import { useAuth } from "@/context/AuthContext";
+import { INTERESTS, OPEN_TO, APP_NAME } from "@/lib/constants";
 import { X } from "lucide-react";
 
-const INTERESTS = [
-  "Music","Sports","Gaming","Art","Travel","Cooking",
-  "Reading","Fitness","Movies","Tech","Fashion","Photography"
-];
-const GENDERS = ["Man","Woman","Non-binary","Other"];
-const GENDER_PREFS = ["Man","Woman","Everyone"];
+const GENDERS = ["Man", "Woman", "Non-binary", "Other"];
 
 export default function Onboarding() {
   const router = useRouter();
@@ -20,11 +16,11 @@ export default function Onboarding() {
   const [name, setName] = useState("");
   const [age, setAge] = useState("");
   const [gender, setGender] = useState("");
-  const [genderPreference, setGenderPreference] = useState("Everyone");
   const [major, setMajor] = useState("");
-  const [university, setUniversity] = useState("");
+  const [university, setUniversity] = useState("Bay Atlantic University");
   const [bio, setBio] = useState("");
   const [interests, setInterests] = useState<string[]>([]);
+  const [openTo, setOpenTo] = useState<string[]>([]);
   const [photos, setPhotos] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
   const [error, setError] = useState("");
@@ -46,21 +42,36 @@ export default function Onboarding() {
   const toggleInterest = (item: string) =>
     setInterests(prev => prev.includes(item) ? prev.filter(i => i !== item) : [...prev, item]);
 
+  const toggleOpenTo = (item: string) =>
+    setOpenTo(prev => prev.includes(item) ? prev.filter(i => i !== item) : [...prev, item]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     if (photos.length === 0) return setError("Please add at least one photo.");
     if (!gender) return setError("Please select your gender.");
     if (interests.length < 3) return setError("Pick at least 3 interests.");
+    if (openTo.length < 1) return setError("Pick at least one way you want to connect.");
     setLoading(true);
     try {
       const uid = auth.currentUser!.uid;
       const uploadedURLs = await Promise.all(photos.map(p => uploadToCloudinary(p)));
       await setDoc(doc(db, "users", uid), {
-        uid, name, age: parseInt(age), gender, genderPreference, major, university,
-        bio, interests, photoURL: uploadedURLs[0], photos: uploadedURLs,
+        uid,
+        name,
+        age: parseInt(age),
+        gender,
+        major,
+        university,
+        bio,
+        interests,
+        openTo,
+        photoURL: uploadedURLs[0],
+        photos: uploadedURLs,
         gallery: [],
-        email: auth.currentUser!.email, blockedUsers: [], createdAt: serverTimestamp()
+        email: auth.currentUser!.email,
+        blockedUsers: [],
+        createdAt: serverTimestamp(),
       });
       await new Promise(r => setTimeout(r, 1000));
       await refreshProfile();
@@ -75,11 +86,10 @@ export default function Onboarding() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/10 to-secondary/10 py-12 px-4">
       <div className="bg-white rounded-3xl shadow-xl p-8 w-full max-w-lg mx-auto">
-        <h1 className="text-3xl font-bold text-gray-900 mb-1">Your Profile 🎓</h1>
-        <p className="text-gray-500 mb-8">Let's get you set up</p>
+        <h1 className="text-3xl font-bold text-gray-900 mb-1">Join {APP_NAME}</h1>
+        <p className="text-gray-500 mb-8">Set up your campus profile</p>
 
         <form onSubmit={handleSubmit} className="space-y-5">
-          {/* Multi-photo upload */}
           <div>
             <p className="text-sm text-gray-600 font-medium mb-2">Photos (up to 6)</p>
             <div className="grid grid-cols-3 gap-2 mb-2">
@@ -125,13 +135,14 @@ export default function Onboarding() {
           </div>
 
           <div>
-            <p className="text-sm text-gray-600 font-medium mb-2">Show me...</p>
+            <p className="text-sm text-gray-600 font-medium mb-2">I&apos;m open to... (pick 1+)</p>
+            <p className="text-xs text-gray-400 mb-2">So classmates know how you like to connect</p>
             <div className="flex flex-wrap gap-2">
-              {GENDER_PREFS.map(g => (
-                <button type="button" key={g} onClick={() => setGenderPreference(g)}
+              {OPEN_TO.map(item => (
+                <button type="button" key={item} onClick={() => toggleOpenTo(item)}
                   className={`px-4 py-2 rounded-full border text-sm font-medium transition ${
-                    genderPreference === g ? "bg-secondary text-white border-secondary" : "border-gray-200 text-gray-600 hover:border-secondary"
-                  }`}>{g}</button>
+                    openTo.includes(item) ? "bg-sky text-white border-sky" : "border-gray-200 text-gray-600 hover:border-sky"
+                  }`}>{item}</button>
               ))}
             </div>
           </div>
@@ -140,7 +151,7 @@ export default function Onboarding() {
             className="w-full border border-gray-200 rounded-2xl px-4 py-3 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary/30" />
           <input required placeholder="Major / Field of study" value={major} onChange={e => setMajor(e.target.value)}
             className="w-full border border-gray-200 rounded-2xl px-4 py-3 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary/30" />
-          <textarea required placeholder="Bio — tell people about yourself" value={bio} onChange={e => setBio(e.target.value)} rows={3}
+          <textarea required placeholder="Bio: what you're into around campus & DC" value={bio} onChange={e => setBio(e.target.value)} rows={3}
             className="w-full border border-gray-200 rounded-2xl px-4 py-3 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none" />
 
           <div>
@@ -159,7 +170,7 @@ export default function Onboarding() {
 
           <button type="submit" disabled={loading}
             className="w-full bg-primary text-white rounded-2xl py-3 font-semibold hover:bg-primary/90 transition disabled:opacity-60">
-            {loading ? "Setting up your profile..." : "Let's go 🚀"}
+            {loading ? "Setting up your profile..." : `Join ${APP_NAME}`}
           </button>
         </form>
       </div>

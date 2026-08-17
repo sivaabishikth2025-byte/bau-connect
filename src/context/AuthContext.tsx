@@ -1,19 +1,21 @@
 "use client";
 import { createContext, useContext, useEffect, useState } from "react";
 import { onAuthStateChanged, User } from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, onSnapshot } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
 import { UserProfile } from "@/types";
+import { isAdminEmail } from "@/lib/admin";
 
 interface AuthContextType {
   user: User | null;
   profile: UserProfile | null;
   loading: boolean;
+  isAdmin: boolean;
   refreshProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
-  user: null, profile: null, loading: true, refreshProfile: async () => {}
+  user: null, profile: null, loading: true, isAdmin: false, refreshProfile: async () => {}
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -48,21 +50,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
-    return onAuthStateChanged(auth, async (u) => {
-      // Reset everything first when auth state changes
+    let unsubProfile: (() => void) | undefined;
+    const unsubAuth = onAuthStateChanged(auth, async (u) => {
+      unsubProfile?.();
       setProfile(null);
       setLoading(true);
       setUser(u);
-      if (u) {
-        await fetchProfile(u.uid);
-      } else {
+      if (!u) {
         setLoading(false);
+        return;
       }
+      unsubProfile = onSnapshot(
+        doc(db, "users", u.uid),
+        snap => {
+          setProfile(snap.exists() ? (snap.data() as UserProfile) : null);
+          setLoading(false);
+        },
+        async () => {
+          await fetchProfile(u.uid);
+        }
+      );
     });
+    return () => {
+      unsubAuth();
+      unsubProfile?.();
+    };
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading, refreshProfile }}>
+    <AuthContext.Provider value={{ user, profile, loading, isAdmin: isAdminEmail(user?.email), refreshProfile }}>
       {children}
     </AuthContext.Provider>
   );

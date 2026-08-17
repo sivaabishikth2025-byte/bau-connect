@@ -1,11 +1,57 @@
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "./firebase";
 
+export type EmailType =
+  | "like"
+  | "match"
+  | "message"
+  | "feed"
+  | "volunteer"
+  | "connect"
+  | "connected"
+  | "alert"
+  | "join"
+  | "comment";
+
+function appOrigin() {
+  if (typeof window !== "undefined") return window.location.origin;
+  return process.env.NEXT_PUBLIC_APP_URL || "https://baustudentconnect.com";
+}
+
+export async function sendEmailToAddress(
+  to: string | string[],
+  opts: {
+    type?: EmailType | string;
+    fromName?: string;
+    url?: string;
+    title?: string;
+    body?: string;
+  }
+) {
+  const recipients = (Array.isArray(to) ? to : [to]).filter(Boolean);
+  if (!recipients.length) return;
+
+  await fetch("/api/email", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      to: recipients,
+      type: opts.type,
+      fromName: opts.fromName,
+      url: opts.url,
+      title: opts.title,
+      body: opts.body,
+      origin: appOrigin(),
+    }),
+  });
+}
+
 export async function sendEmailNotification(
   toUserId: string,
-  type: "like" | "match" | "message",
+  type: EmailType | string,
   fromName: string,
-  url: string = "/"
+  url: string = "/",
+  extra?: { title?: string; body?: string }
 ) {
   try {
     const snap = await getDoc(doc(db, "users", toUserId));
@@ -13,10 +59,12 @@ export async function sendEmailNotification(
     const email = snap.data().email;
     if (!email) return;
 
-    await fetch("/api/email", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ to: email, type, fromName, url }),
+    await sendEmailToAddress(email, {
+      type,
+      fromName,
+      url,
+      title: extra?.title,
+      body: extra?.body,
     });
   } catch (e) {
     console.error("sendEmailNotification error:", e);

@@ -62,7 +62,7 @@ export function listenForForegroundMessages(onNotification: (payload: any) => vo
     return onMessage(m, (payload) => {
       onNotification(payload);
       if (Notification.permission === "granted" && payload.notification) {
-        new Notification(payload.notification.title || "BAUdate", {
+        new Notification(payload.notification.title || "BAU Connect", {
           body: payload.notification.body,
           icon: "/icon.png"
         });

@@ -4,8 +4,8 @@ import { AuthProvider } from "@/context/AuthContext";
 import NotificationsProvider from "@/components/NotificationsProvider";
 
 export const metadata: Metadata = {
-  title: "BAUdate — Find your campus match",
-  description: "The exclusive dating app for Bay Atlantic University students and staff"
+  title: "BAU Connect | Campus life, together",
+  description: "Connect with Bay Atlantic University classmates for carpools, study groups, hangouts, and exploring DC"
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

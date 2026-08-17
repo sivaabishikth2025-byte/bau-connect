@@ -7,11 +7,7 @@ import { useAuth } from "@/context/AuthContext";
 import Navbar from "@/components/Navbar";
 import { Camera, Pencil, X, QrCode, Download, Plus } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
-
-const INTERESTS = [
-  "Music","Sports","Gaming","Art","Travel","Cooking",
-  "Reading","Fitness","Movies","Tech","Fashion","Photography"
-];
+import { INTERESTS, OPEN_TO, APP_NAME, MAX_GALLERY_PHOTOS } from "@/lib/constants";
 
 export default function Profile() {
   const { profile } = useAuth();
@@ -19,6 +15,7 @@ export default function Profile() {
   const [bio, setBio] = useState("");
   const [major, setMajor] = useState("");
   const [interests, setInterests] = useState<string[]>([]);
+  const [openTo, setOpenTo] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState("");
   const [showQR, setShowQR] = useState(false);
@@ -29,6 +26,7 @@ export default function Profile() {
       setBio(profile.bio);
       setMajor(profile.major);
       setInterests(profile.interests);
+      setOpenTo(profile.openTo || []);
     }
   }, [profile]);
 
@@ -48,7 +46,7 @@ export default function Profile() {
     setSaving(true);
     try {
       const existing = profile.gallery || [];
-      const slots = 15 - existing.length;
+      const slots = MAX_GALLERY_PHOTOS - existing.length;
       if (slots <= 0) return;
       const newURLs = await Promise.all(files.slice(0, slots).map(f => uploadToCloudinary(f)));
       await updateDoc(doc(db, "users", profile.uid), { gallery: [...existing, ...newURLs] });
@@ -65,7 +63,7 @@ export default function Profile() {
     if (!profile) return;
     setSaving(true);
     try {
-      await updateDoc(doc(db, "users", profile.uid), { bio, major, interests });
+      await updateDoc(doc(db, "users", profile.uid), { bio, major, interests, openTo });
       setEditing(false);
       setMsg("Profile updated!");
       setTimeout(() => setMsg(""), 2000);
@@ -74,6 +72,9 @@ export default function Profile() {
 
   const toggle = (item: string) =>
     setInterests(prev => prev.includes(item) ? prev.filter(i => i !== item) : [...prev, item]);
+
+  const toggleOpenTo = (item: string) =>
+    setOpenTo(prev => prev.includes(item) ? prev.filter(i => i !== item) : [...prev, item]);
 
   const downloadQR = () => {
     const svg = qrRef.current?.querySelector("svg");
@@ -89,7 +90,7 @@ export default function Profile() {
       ctx.fillRect(0, 0, 300, 300);
       ctx.drawImage(img, 0, 0, 300, 300);
       const a = document.createElement("a");
-      a.download = `baudate-${profile?.name?.replace(/\s+/g, "-").toLowerCase()}-qr.png`;
+      a.download = `bau-connect-${profile?.name?.replace(/\s+/g, "-").toLowerCase()}-qr.png`;
       a.href = canvas.toDataURL("image/png");
       a.click();
     };
@@ -104,7 +105,7 @@ export default function Profile() {
 
   const profileUrl = typeof window !== "undefined"
     ? `${window.location.origin}/u/${profile.uid}`
-    : `https://baudate.app/u/${profile.uid}`;
+    : `https://baustudentconnect.com/u/${profile.uid}`;
 
   const gallery = profile.gallery || [];
 
@@ -134,7 +135,7 @@ export default function Profile() {
         {/* Profile Picture card */}
         <div className="bg-white rounded-3xl p-6 shadow-sm">
           <p className="text-xl font-black text-primary mb-1">Profile Picture</p>
-          <p className="text-sm text-gray-400 mb-6">This is the main photo shown on your card in Discover.</p>
+          <p className="text-sm text-gray-400 mb-6">This is the main photo shown on your card in People.</p>
           <div className="flex items-center gap-6">
             <div className="relative shrink-0">
               <img src={profile.photoURL} alt={profile.name}
@@ -159,11 +160,11 @@ export default function Profile() {
         <div className="bg-white rounded-3xl p-6 shadow-sm">
           <div className="flex items-center justify-between mb-1">
             <p className="text-xl font-black text-primary">Gallery</p>
-            <p className="text-sm text-gray-400">{gallery.length} / 15</p>
+            <p className="text-sm text-gray-400">{Math.min(gallery.length, MAX_GALLERY_PHOTOS)} / {MAX_GALLERY_PHOTOS}</p>
           </div>
-          <p className="text-sm text-gray-400 mb-6">Upload up to 15 pictures to your personal gallery. People can browse these on your full profile.</p>
+          <p className="text-sm text-gray-400 mb-6">Upload up to {MAX_GALLERY_PHOTOS} pictures to your personal gallery. People can browse these on your full profile.</p>
           <div className="grid grid-cols-3 gap-3">
-            {gallery.map((p, i) => (
+            {gallery.slice(0, MAX_GALLERY_PHOTOS).map((p, i) => (
               <div key={i} className="relative aspect-square">
                 <img src={p} className="w-full h-full object-cover rounded-2xl shadow-sm" />
                 <button onClick={() => removeGalleryPhoto(p)}
@@ -172,7 +173,7 @@ export default function Profile() {
                 </button>
               </div>
             ))}
-            {gallery.length < 15 && (
+            {gallery.length < MAX_GALLERY_PHOTOS && (
               <label className="aspect-square rounded-2xl border-2 border-dashed border-sky/40 bg-[#EAF2FB] flex flex-col items-center justify-center cursor-pointer hover:border-sky transition gap-2">
                 <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm">
                   <Plus size={20} className="text-sky" />
@@ -197,6 +198,17 @@ export default function Profile() {
               <label className="text-xs text-gray-400 font-semibold uppercase tracking-wide">Bio</label>
               <textarea value={bio} onChange={e => setBio(e.target.value)} rows={3}
                 className="w-full border border-gray-200 rounded-2xl px-4 py-3 mt-1 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none text-sm" />
+            </div>
+            <div>
+              <label className="text-xs text-gray-400 font-semibold uppercase tracking-wide mb-2 block">Open to</label>
+              <div className="flex flex-wrap gap-2">
+                {OPEN_TO.map(item => (
+                  <button key={item} type="button" onClick={() => toggleOpenTo(item)}
+                    className={`px-3 py-1.5 rounded-full border text-sm font-medium transition ${
+                      openTo.includes(item) ? "bg-sky text-white border-sky" : "border-gray-200 text-gray-600 bg-white"
+                    }`}>{item}</button>
+                ))}
+              </div>
             </div>
             <div>
               <label className="text-xs text-gray-400 font-semibold uppercase tracking-wide mb-2 block">Interests</label>
@@ -230,6 +242,16 @@ export default function Profile() {
               <p className="text-xs text-gray-400 font-semibold uppercase tracking-wide mb-1">Bio</p>
               <p className="text-gray-700 text-sm leading-relaxed">{profile.bio}</p>
             </div>
+            {profile.openTo && profile.openTo.length > 0 && (
+              <div className="border-t border-gray-100 pt-4">
+                <p className="text-xs text-gray-400 font-semibold uppercase tracking-wide mb-3">Open to</p>
+                <div className="flex flex-wrap gap-2">
+                  {profile.openTo.map(i => (
+                    <span key={i} className="bg-sky/10 text-sky text-sm font-medium px-3 py-1 rounded-full">{i}</span>
+                  ))}
+                </div>
+              </div>
+            )}
             <div className="border-t border-gray-100 pt-4">
               <p className="text-xs text-gray-400 font-semibold uppercase tracking-wide mb-3">Interests</p>
               <div className="flex flex-wrap gap-2">
@@ -256,8 +278,8 @@ export default function Profile() {
       {showQR && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4">
           <div className="bg-white rounded-3xl p-8 w-full max-w-xs shadow-2xl text-center">
-            <h2 className="text-lg font-bold text-gray-900 mb-1">Your BAUdate QR</h2>
-            <p className="text-gray-400 text-xs mb-6">Share this to let people find your profile</p>
+            <h2 className="text-lg font-bold text-gray-900 mb-1">Your {APP_NAME} QR</h2>
+            <p className="text-gray-400 text-xs mb-6">Share this so classmates can find your profile</p>
             <div ref={qrRef} className="flex justify-center mb-4 p-4 bg-gray-50 rounded-2xl">
               <QRCodeSVG value={profileUrl} size={200} fgColor="#1C2D5A" bgColor="#F4F7FF" level="H"
                 imageSettings={{ src: "/bau-logo.png", height: 36, width: 36, excavate: true }} />

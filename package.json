@@ -1,5 +1,5 @@
 {
-  "name": "unidate",
+  "name": "bau-connect",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -8,20 +8,22 @@
     "start": "next start"
   },
   "dependencies": {
+    "@aws-sdk/client-sesv2": "^3.1111.0",
     "@cloudinary/url-gen": "^1.22.0",
     "@netlify/plugin-nextjs": "^5.15.9",
     "clsx": "^2.1.1",
     "date-fns": "^3.6.0",
     "firebase": "^12.12.0",
     "jose": "^6.2.2",
+    "leaflet": "^1.9.4",
     "lucide-react": "^0.378.0",
     "next": "^16.2.3",
     "qrcode.react": "^4.2.0",
     "react": "^18",
-    "react-dom": "^18",
-    "resend": "^6.12.2"
+    "react-dom": "^18"
   },
   "devDependencies": {
+    "@types/leaflet": "^1.9.22",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",

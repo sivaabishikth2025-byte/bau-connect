@@ -1,46 +1,135 @@
 import { NextRequest, NextResponse } from "next/server";
-import { Resend } from "resend";
+import { SESv2Client, SendEmailCommand } from "@aws-sdk/client-sesv2";
+
+function parseFrom(raw: string) {
+  const match = raw.match(/^(.*)<([^>]+)>$/);
+  if (match) {
+    return {
+      name: match[1].trim().replace(/^"|"$/g, "") || "BAU Connect",
+      email: match[2].trim(),
+    };
+  }
+  return { name: "BAU Connect", email: raw.trim() };
+}
 
 export async function POST(req: NextRequest) {
-  const resend = new Resend(process.env.RESEND_API_KEY);
-  const FROM = process.env.RESEND_FROM_EMAIL || "BAUdate <onboarding@resend.dev>";
-  const { to, type, fromName, url } = await req.json();
+  const region = process.env.AWS_REGION || process.env.AWS_DEFAULT_REGION || "us-east-1";
+  const fromRaw = process.env.SES_FROM_EMAIL || process.env.AWS_SES_FROM_EMAIL;
 
-  if (!to || !type || !fromName) {
-    return NextResponse.json({ error: "Missing fields" }, { status: 400 });
+  if (!fromRaw) {
+    return NextResponse.json({ error: "SES_FROM_EMAIL is not set" }, { status: 500 });
+  }
+  if (!process.env.AWS_ACCESS_KEY_ID || !process.env.AWS_SECRET_ACCESS_KEY) {
+    return NextResponse.json({ error: "AWS credentials are not set" }, { status: 500 });
   }
 
-  const subjects: Record<string, string> = {
-    like: `${fromName} liked your profile on BAUdate 💜`,
-    match: `You matched with ${fromName} on BAUdate 🎉`,
-    message: `New message from ${fromName} on BAUdate 💬`,
+  const payload = await req.json();
+  const { to, type, fromName, url, title, body, origin: clientOrigin } = payload;
+
+  const recipients: string[] = (Array.isArray(to) ? to : [to]).filter(Boolean);
+  if (!recipients.length) {
+    return NextResponse.json({ error: "Missing recipient" }, { status: 400 });
+  }
+
+  const name = fromName || "A classmate";
+  const templates: Record<string, { subject: string; html: string }> = {
+    like: {
+      subject: `${name} wants to connect on BAU Connect`,
+      html: `<p><strong>${name}</strong> sent you a connection request on BAU Connect.</p><p>Log in to accept and start chatting.</p>`,
+    },
+    connect: {
+      subject: `${name} wants to connect on BAU Connect`,
+      html: `<p><strong>${name}</strong> sent you a connection request on BAU Connect.</p><p>Log in to accept and start chatting.</p>`,
+    },
+    match: {
+      subject: `You're connected with ${name} on BAU Connect`,
+      html: `<p>You and <strong>${name}</strong> are now connected.</p><p>Open Connections to say hello.</p>`,
+    },
+    connected: {
+      subject: `You're connected with ${name} on BAU Connect`,
+      html: `<p>You and <strong>${name}</strong> are now connected.</p><p>Open Connections to say hello.</p>`,
+    },
+    message: {
+      subject: `New message from ${name} on BAU Connect`,
+      html: `<p><strong>${name}</strong> sent you a message on BAU Connect.</p><p>Jump back in and reply.</p>`,
+    },
+    feed: {
+      subject: `${name} posted on the BAU Connect feed`,
+      html: `<p><strong>${name}</strong> shared a new campus post.</p>${body ? `<p>${body}</p>` : ""}<p>Open the feed to join.</p>`,
+    },
+    volunteer: {
+      subject: `${name} posted a volunteer update on BAU Connect`,
+      html: `<p><strong>${name}</strong> shared a campus volunteer update.</p>${body ? `<p>${body}</p>` : ""}<p>Open Volunteers to check it.</p>`,
+    },
+    alert: {
+      subject: title || "Campus announcement on BAU Connect",
+      html: `<p>Staff posted an announcement on BAU Connect.</p>${body ? `<p>${body}</p>` : ""}`,
+    },
+    join: {
+      subject: `${name} liked your post on BAU Connect`,
+      html: `<p><strong>${name}</strong> liked your campus post.</p>${body ? `<p>${body}</p>` : ""}`,
+    },
+    comment: {
+      subject: `${name} commented on your post`,
+      html: `<p><strong>${name}</strong> left a comment.</p>${body ? `<p>${body}</p>` : ""}`,
+    },
   };
 
-  const bodies: Record<string, string> = {
-    like: `<p><strong>${fromName}</strong> liked your profile on BAUdate.</p><p>Log in to see who it is and like them back!</p>`,
-    match: `<p>You and <strong>${fromName}</strong> liked each other — it's a match!</p><p>Head to your matches to start chatting.</p>`,
-    message: `<p><strong>${fromName}</strong> sent you a message on BAUdate.</p><p>Don't leave them hanging — reply now!</p>`,
-  };
+  const tpl = type ? templates[type] : undefined;
+  const subject = title || tpl?.subject || "New update on BAU Connect";
+  const inner = body
+    ? `<p>${String(body).replace(/\n/g, "<br/>")}</p>`
+    : tpl?.html || "<p>You have a new update on BAU Connect.</p>";
+
+  const origin = (clientOrigin || process.env.NEXT_PUBLIC_APP_URL || "https://baustudentconnect.com").replace(/\/$/, "");
+  const href = url
+    ? (String(url).startsWith("http") ? url : `${origin}${url}`)
+    : origin;
+
+  const from = parseFrom(fromRaw);
+  const html = `
+    <div style="font-family:Nunito,sans-serif;max-width:480px;margin:0 auto;padding:32px;background:#f4f7ff;border-radius:16px;">
+      <h2 style="color:#1C2D5A;margin-bottom:12px;">${subject}</h2>
+      <div style="color:#444;line-height:1.7;margin-bottom:24px;">${inner}</div>
+      <a href="${href}" style="display:inline-block;background:#1C2D5A;color:#fff;padding:14px 32px;border-radius:12px;text-decoration:none;font-weight:700;">
+        Open BAU Connect
+      </a>
+      <p style="color:#aaa;font-size:12px;margin-top:32px;">You're receiving this because you have an account on BAU Connect | Bay Atlantic University</p>
+    </div>
+  `;
 
   try {
-    await resend.emails.send({
-      from: FROM,
-      to,
-      subject: subjects[type],
-      html: `
-        <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px;background:#f4f7ff;border-radius:16px;">
-          <img src="https://baudate.app/bau-logo.png" alt="BAUdate" style="height:48px;margin-bottom:24px;" />
-          <h2 style="color:#1C2D5A;margin-bottom:12px;">${subjects[type]}</h2>
-          <div style="color:#444;line-height:1.7;margin-bottom:24px;">${bodies[type]}</div>
-          <a href="${url || "https://baudate.app"}" style="display:inline-block;background:linear-gradient(to right,#F15B47,#DBA631);color:#fff;padding:14px 32px;border-radius:12px;text-decoration:none;font-weight:700;">
-            Open BAUdate
-          </a>
-          <p style="color:#aaa;font-size:12px;margin-top:32px;">You're receiving this because you have an account on BAUdate · Bay Atlantic University</p>
-        </div>
-      `,
-    });
-    return NextResponse.json({ ok: true });
+    const client = new SESv2Client({ region });
+    const results = [];
+
+    for (const email of recipients) {
+      const result = await client.send(
+        new SendEmailCommand({
+          FromEmailAddress: `${from.name} <${from.email}>`,
+          Destination: { ToAddresses: [email] },
+          Content: {
+            Simple: {
+              Subject: { Data: subject, Charset: "UTF-8" },
+              Body: {
+                Html: { Data: html, Charset: "UTF-8" },
+                Text: {
+                  Data: `${subject}\n\n${String(body || "").replace(/<[^>]+>/g, "")}\n\nOpen BAU Connect: ${href}`,
+                  Charset: "UTF-8",
+                },
+              },
+            },
+          },
+        })
+      );
+      results.push({ email, messageId: result.MessageId });
+    }
+
+    return NextResponse.json({ ok: true, results });
   } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 500 });
+    console.error("SES send error:", e);
+    return NextResponse.json(
+      { error: e?.message || "Failed to send email" },
+      { status: 500 }
+    );
   }
 }

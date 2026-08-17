@@ -1,18 +1,19 @@
 "use client";
 import { useEffect, useState } from "react";
 import {
-  collection, query, where, getDocs,
-  addDoc, serverTimestamp
+  collection, query, where, getDocs
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
 import { UserProfile } from "@/types";
 import Navbar from "@/components/Navbar";
-import { Heart, X, SlidersHorizontal, Search } from "lucide-react";
+import { AppStarfield, appPageBg } from "@/components/AppShell";
+import { UserPlus, X, SlidersHorizontal, Search, MapPin, CalendarDays } from "lucide-react";
 import { useNotifications } from "@/hooks/useNotifications";
-import { sendPushNotification } from "@/lib/sendNotification";
-import { sendEmailNotification } from "@/lib/sendEmail";
 import { requestNotificationPermission } from "@/lib/notifications";
+import { OPEN_TO } from "@/lib/constants";
+import Link from "next/link";
+import { sendFollowRequest } from "@/lib/follow";
 
 export default function Dashboard() {
   const { user, profile, loading: authLoading } = useAuth();
@@ -20,10 +21,10 @@ export default function Dashboard() {
   const [index, setIndex] = useState(0);
   const [photoIndex, setPhotoIndex] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [matchMsg, setMatchMsg] = useState("");
+  const [connectMsg, setConnectMsg] = useState("");
   const [swipeDir, setSwipeDir] = useState<"left" | "right" | null>(null);
   const [showFilter, setShowFilter] = useState(false);
-  const [filterGender, setFilterGender] = useState("Everyone");
+  const [filterOpenTo, setFilterOpenTo] = useState("Everyone");
   const [showNotifBanner, setShowNotifBanner] = useState(false);
   const [search, setSearch] = useState("");
 
@@ -41,12 +42,11 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (!authLoading && profile) {
-      setFilterGender(profile.genderPreference || "Everyone");
-      loadUsers(profile.genderPreference || "Everyone");
+      loadUsers("Everyone");
     }
   }, [profile, authLoading]);
 
-  const loadUsers = async (genderFilter: string) => {
+  const loadUsers = async (openToFilter: string) => {
     setLoading(true);
     setIndex(0);
     setPhotoIndex(0);
@@ -57,57 +57,40 @@ export default function Dashboard() {
     const excluded = new Set([user!.uid, ...likedIds, ...(profile?.blockedUsers || [])]);
     const snap = await getDocs(collection(db, "users"));
     let all = snap.docs.map(d => d.data() as UserProfile).filter(u => !excluded.has(u.uid));
-    if (genderFilter !== "Everyone") all = all.filter(u => u.gender === genderFilter);
+    if (openToFilter !== "Everyone") {
+      all = all.filter(u => u.openTo?.includes(openToFilter));
+    }
     setUsers(all);
     setLoading(false);
   };
 
-  const applyFilter = (g: string) => {
-    setFilterGender(g);
+  const applyFilter = (value: string) => {
+    setFilterOpenTo(value);
     setShowFilter(false);
-    loadUsers(g);
+    loadUsers(value);
   };
 
-  const handleLike = async () => {
+  const handleConnect = async () => {
     const target = users[index];
-    if (!target) return;
+    if (!target || !user || !profile) return;
     setSwipeDir("right");
     setTimeout(() => { setSwipeDir(null); setPhotoIndex(0); }, 400);
 
-    await addDoc(collection(db, "likes"), {
-      fromUserId: user!.uid, toUserId: target.uid, createdAt: serverTimestamp()
+    const result = await sendFollowRequest({
+      fromUserId: user.uid,
+      fromName: profile.name,
+      toUserId: target.uid,
     });
-
-    sendPushNotification(target.uid, "Someone liked you! 💜",
-      `${profile?.name} liked your profile on BAUdate`, "/liked-me");
-    sendEmailNotification(target.uid, "like", profile?.name || "Someone", "/liked-me");
-
-    const mutual = await getDocs(query(
-      collection(db, "likes"),
-      where("fromUserId", "==", target.uid),
-      where("toUserId", "==", user!.uid)
-    ));
-    if (!mutual.empty) {
-      const existing = await getDocs(query(
-        collection(db, "matches"),
-        where("user1Id", "in", [user!.uid, target.uid]),
-        where("user2Id", "in", [user!.uid, target.uid])
-      ));
-      if (existing.empty) {
-        await addDoc(collection(db, "matches"), {
-          user1Id: user!.uid, user2Id: target.uid, createdAt: serverTimestamp()
-        });
-        setMatchMsg(`It's a match with ${target.name}! 💜`);
-        setTimeout(() => setMatchMsg(""), 3000);
-        sendPushNotification(target.uid, "It's a match! 💜",
-          `You and ${profile?.name} liked each other!`, "/matches");
-        sendEmailNotification(target.uid, "match", profile?.name || "Someone", "/matches");
-      }
-    }
+    setConnectMsg(
+      result.status === "following"
+        ? `You're following ${target.name}`
+        : `Follow request sent to ${target.name}`
+    );
+    setTimeout(() => setConnectMsg(""), 2500);
     setIndex(i => i + 1);
   };
 
-  const handlePass = () => {
+  const handleSkip = () => {
     setSwipeDir("left");
     setTimeout(() => { setSwipeDir(null); setPhotoIndex(0); }, 400);
     setIndex(i => i + 1);
@@ -115,40 +98,43 @@ export default function Dashboard() {
 
   const current = users[index];
 
-  // Search: find first user matching the query
   const searchedUsers = search.trim()
     ? users.filter(u =>
         u.name.toLowerCase().includes(search.toLowerCase()) ||
         u.major.toLowerCase().includes(search.toLowerCase()) ||
-        u.interests?.some(i => i.toLowerCase().includes(search.toLowerCase()))
+        u.interests?.some(i => i.toLowerCase().includes(search.toLowerCase())) ||
+        u.openTo?.some(i => i.toLowerCase().includes(search.toLowerCase()))
       )
     : users;
   const displayUser = search.trim() ? searchedUsers[0] : current;
   const displayPhotos = displayUser?.photos?.length ? displayUser.photos : displayUser ? [displayUser.photoURL] : [];
 
   return (
-    <div className="min-h-screen pb-20 md:pb-0 md:pt-16 relative overflow-hidden" style={{background:"radial-gradient(ellipse at 30% 60%,rgba(40,170,226,.15),transparent 60%),radial-gradient(ellipse at 80% 20%,rgba(219,166,49,.1),transparent 50%),#1C2D5A"}}>
-      <style>{`
-        @keyframes star-to-right{0%{background-position:-550px -315px}100%{background-position:550px 315px}}
-        .sl{position:absolute;inset:0;background-repeat:repeat;background-size:550px auto;animation:star-to-right 65s linear infinite;pointer-events:none;}
-        .sl1{background-image:url("https://gamba-animations.netlify.app/images/greetings/greetings_star_1.png");}
-        .sl2{opacity:.5;transform:scale(2);filter:blur(3px);background-image:url("https://gamba-animations.netlify.app/images/greetings/greetings_star_2.png");animation-duration:30s;}
-        .sl3{opacity:.3;transform:scale(1.5);filter:blur(1.5px);background-image:url("https://gamba-animations.netlify.app/images/greetings/greetings_star_3.png");animation-duration:40s;}
-      `}</style>
-      <span className="sl sl1"/><span className="sl sl2"/><span className="sl sl3"/>
+    <div className="min-h-screen pb-24 md:pb-0 md:pt-16 relative overflow-hidden" style={{ background: appPageBg }}>
+      <AppStarfield />
       <Navbar />
       <div className="max-w-lg mx-auto px-4 pt-8 relative z-10">
 
-        {/* Header */}
-        <div className="text-center mb-6">
-          <div className="flex items-center justify-center gap-2 mb-1">
-            <span className="text-secondary text-2xl">✦</span>
-            <h1 className="text-3xl font-black text-white">Discover</h1>
-          </div>
-          <p className="text-white/50 text-sm">Find your perfect match</p>
+        <div className="text-center mb-4">
+          <h1 className="text-3xl font-black text-white">People</h1>
+          <p className="text-white/50 text-sm mt-1">Find classmates and send a follow request</p>
         </div>
 
-        {/* Controls row */}
+        <div className="flex gap-2 mb-4">
+          <Link
+            href="/activities"
+            className="flex-1 flex items-center justify-center gap-2 bg-white/10 border border-white/15 text-white text-xs font-bold px-3 py-2.5 rounded-2xl hover:bg-white/15 transition"
+          >
+            <CalendarDays size={14} /> Campus feed
+          </Link>
+          <Link
+            href="/map"
+            className="flex-1 flex items-center justify-center gap-2 bg-white/10 border border-white/15 text-white text-xs font-bold px-3 py-2.5 rounded-2xl hover:bg-white/15 transition"
+          >
+            <MapPin size={14} /> BAU maps
+          </Link>
+        </div>
+
         <div className="flex items-center gap-3 mb-4">
           <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-2xl px-4 py-2.5 flex-1 shadow-sm">
             <Search size={15} className="text-gray-400 shrink-0" />
@@ -165,17 +151,19 @@ export default function Dashboard() {
             )}
           </div>
           <button onClick={() => setShowFilter(true)}
-            className="bg-white border border-gray-200 rounded-2xl p-2.5 shadow-sm hover:border-primary transition">
+            className="bg-white border border-gray-200 rounded-2xl p-2.5 shadow-sm hover:border-primary transition relative">
             <SlidersHorizontal size={18} className="text-gray-500" />
+            {filterOpenTo !== "Everyone" && (
+              <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-secondary rounded-full" />
+            )}
           </button>
         </div>
 
-        {/* Notification banner */}
         {showNotifBanner && (
           <div className="bg-primary/10 border border-primary/20 rounded-2xl p-4 mb-4 flex items-center justify-between">
             <div>
-              <p className="text-primary font-semibold text-sm">Enable notifications 🔔</p>
-              <p className="text-gray-500 text-xs">Get notified for likes and messages</p>
+              <p className="text-primary font-semibold text-sm">Enable notifications</p>
+              <p className="text-gray-500 text-xs">Get notified for follow requests and messages</p>
             </div>
             <div className="flex gap-2 ml-3">
               <button onClick={async () => { const g = await requestNotificationPermission(); if (g) setShowNotifBanner(false); }}
@@ -187,24 +175,28 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Gender filter modal */}
         {showFilter && (
           <div className="fixed inset-0 bg-black/40 z-50 flex items-end justify-center" onClick={() => setShowFilter(false)}>
-            <div className="bg-white rounded-t-3xl p-6 w-full max-w-md" onClick={e => e.stopPropagation()}>
-              <h2 className="text-lg font-bold text-gray-900 mb-4">Show me</h2>
-              {["Everyone", "Man", "Woman", "Non-binary", "Other"].map(g => (
-                <button key={g} onClick={() => applyFilter(g)}
+            <div className="bg-white rounded-t-3xl p-6 w-full max-w-md max-h-[80vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+              <h2 className="text-lg font-bold text-gray-900 mb-1">Looking for</h2>
+              <p className="text-gray-500 text-sm mb-4">Filter people by what they&apos;re open to</p>
+              <button onClick={() => applyFilter("Everyone")}
+                className={`w-full text-left px-4 py-3 rounded-2xl mb-2 font-medium transition ${
+                  filterOpenTo === "Everyone" ? "bg-primary text-white" : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                }`}>Everyone</button>
+              {OPEN_TO.map(option => (
+                <button key={option} onClick={() => applyFilter(option)}
                   className={`w-full text-left px-4 py-3 rounded-2xl mb-2 font-medium transition ${
-                    filterGender === g ? "bg-primary text-white" : "bg-gray-50 text-gray-700 hover:bg-gray-100"
-                  }`}>{g}</button>
+                    filterOpenTo === option ? "bg-primary text-white" : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                  }`}>{option}</button>
               ))}
             </div>
           </div>
         )}
 
-        {matchMsg && (
+        {connectMsg && (
           <div className="bg-primary text-white rounded-2xl p-4 text-center font-semibold mb-4 animate-bounce">
-            {matchMsg}
+            {connectMsg}
           </div>
         )}
 
@@ -213,26 +205,29 @@ export default function Dashboard() {
             <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
           </div>
         ) : !displayUser ? (
-          <div className="text-center pt-20">
+          <div className="text-center pt-16 bg-white/5 rounded-3xl border border-white/10 p-10">
             {search ? (
               <>
-                <div className="text-6xl mb-4">🔍</div>
-                <p className="text-xl font-bold text-gray-900 mb-2">No results for "{search}"</p>
-                <p className="text-gray-500 mb-6">Try a different name, major or interest</p>
+                <p className="text-xl font-bold text-white mb-2">No results for &quot;{search}&quot;</p>
+                <p className="text-white/50 mb-6 text-sm">Try a different name, major, or interest</p>
                 <button onClick={() => setSearch("")}
                   className="bg-primary text-white px-8 py-3 rounded-2xl font-semibold hover:bg-primary/90 transition">
-                  Clear Search
+                  Clear search
                 </button>
               </>
             ) : (
               <>
-                <div className="text-6xl mb-4">🎉</div>
-                <p className="text-xl font-bold text-gray-900 mb-2">You've seen everyone!</p>
-                <p className="text-gray-500 mb-6">Check back later for new people</p>
-                <button onClick={() => loadUsers(filterGender)}
-                  className="bg-primary text-white px-8 py-3 rounded-2xl font-semibold hover:bg-primary/90 transition">
-                  Refresh
-                </button>
+                <p className="text-xl font-bold text-white mb-2">You&apos;ve seen everyone</p>
+                <p className="text-white/50 mb-6 text-sm">Check the campus feed or try a different filter</p>
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  <button onClick={() => loadUsers(filterOpenTo)}
+                    className="bg-primary text-white px-8 py-3 rounded-2xl font-semibold hover:bg-primary/90 transition">
+                    Refresh
+                  </button>
+                  <Link href="/activities" className="bg-secondary text-primary px-8 py-3 rounded-2xl font-semibold">
+                    Open feed
+                  </Link>
+                </div>
               </>
             )}
           </div>
@@ -241,17 +236,14 @@ export default function Dashboard() {
             !search && swipeDir === "right" ? "translate-x-full opacity-0" :
             !search && swipeDir === "left" ? "-translate-x-full opacity-0" : ""
           }`}>
-            {/* Card */}
             <div className="bg-white rounded-3xl shadow-xl overflow-hidden">
-              {/* Photo */}
               <div className="relative">
                 <img
                   src={displayPhotos[photoIndex] || displayUser.photoURL}
                   alt={displayUser.name}
                   className="w-full object-cover"
-                  style={{height: "420px"}}
+                  style={{ height: "420px" }}
                 />
-                {/* Photo dots */}
                 {displayPhotos.length > 1 && (
                   <div className="absolute top-3 left-0 right-0 flex justify-center gap-1.5 px-4">
                     {displayPhotos.map((_, i) => (
@@ -260,7 +252,6 @@ export default function Dashboard() {
                     ))}
                   </div>
                 )}
-                {/* Tap zones for photo nav */}
                 {displayPhotos.length > 1 && (
                   <>
                     <button onClick={() => setPhotoIndex(i => Math.max(0, i - 1))}
@@ -269,21 +260,27 @@ export default function Dashboard() {
                       className="absolute right-0 top-0 bottom-0 w-1/3 opacity-0" disabled={photoIndex === displayPhotos.length - 1} />
                   </>
                 )}
-                {/* Name overlay */}
                 <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/75 via-black/30 to-transparent p-5 pt-16">
-                  <h2 className="text-white text-2xl font-bold leading-tight">{displayUser.name}, {displayUser.age}</h2>
-                  <div className="flex items-center gap-1 mt-1">
-                    <svg className="w-3.5 h-3.5 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                    <p className="text-white/80 text-sm">{displayUser.major} · {displayUser.university}</p>
-                  </div>
+                  <Link href={`/u/${displayUser.uid}`} className="text-white text-2xl font-bold leading-tight hover:underline">
+                    {displayUser.name}, {displayUser.age}
+                  </Link>
+                  <p className="text-white/80 text-sm mt-1">{displayUser.major} · {displayUser.university}</p>
                 </div>
               </div>
 
-              {/* Info section */}
               <div className="p-5">
+                {displayUser.openTo && displayUser.openTo.length > 0 && (
+                  <div className="mb-4">
+                    <p className="text-sm font-bold text-gray-900 mb-2">Open to</p>
+                    <div className="flex flex-wrap gap-2">
+                      {displayUser.openTo.map(item => (
+                        <span key={item} className="bg-sky/10 text-sky text-xs font-semibold px-3 py-1 rounded-full border border-sky/20">
+                          {item}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 {displayUser.bio && (
                   <div className="mb-4">
                     <p className="text-sm font-bold text-gray-900 mb-1">About</p>
@@ -302,31 +299,26 @@ export default function Dashboard() {
                     </div>
                   </div>
                 )}
-                <button
-                  onClick={() => window.location.href = `/u/${displayUser.uid}`}
-                  className="text-sky text-sm font-medium hover:underline mt-1 block"
-                >
-                  View Full Profile →
-                </button>
+                <Link href={`/u/${displayUser.uid}`} className="text-sky text-sm font-medium hover:underline mt-1 block">
+                  View full profile →
+                </Link>
               </div>
             </div>
 
-            {/* Action buttons */}
             {!search && (
               <div className="flex justify-center items-center gap-6 mt-6 mb-4">
-                <button onClick={handlePass}
+                <button onClick={handleSkip}
                   className="w-14 h-14 bg-white rounded-full shadow-lg flex items-center justify-center hover:scale-110 active:scale-95 transition border border-gray-100">
                   <X size={24} className="text-gray-400" />
                 </button>
-                <button onClick={handleLike}
-                  className="w-16 h-16 rounded-full shadow-xl flex items-center justify-center hover:scale-110 active:scale-95 transition"
-                  style={{background:"linear-gradient(135deg,#F15B47,#DBA631)"}}>
-                  <Heart size={26} className="text-white fill-white" />
+                <button onClick={handleConnect}
+                  className="w-16 h-16 rounded-full shadow-xl flex items-center justify-center hover:scale-110 active:scale-95 transition bg-primary">
+                  <UserPlus size={26} className="text-white" />
                 </button>
               </div>
             )}
             {search && searchedUsers.length > 1 && (
-              <p className="text-center text-gray-400 text-xs mt-3">{searchedUsers.length} results — clear search to swipe</p>
+              <p className="text-center text-white/40 text-xs mt-3">{searchedUsers.length} results. Clear search to browse</p>
             )}
           </div>
         )}

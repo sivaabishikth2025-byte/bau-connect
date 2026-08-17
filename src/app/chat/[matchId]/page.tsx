@@ -12,7 +12,7 @@ import { format } from "date-fns";
 import { ArrowLeft, Send, Check, CheckCheck } from "lucide-react";
 import Link from "next/link";
 import { sendPushNotification } from "@/lib/sendNotification";
-import { sendEmailNotification } from "@/lib/sendEmail";
+import { notifyUser } from "@/lib/inbox";
 
 export default function Chat() {
   const { matchId } = useParams<{ matchId: string }>();
@@ -74,7 +74,14 @@ export default function Chat() {
         `${user!.displayName || "Someone"}: ${trimmed.slice(0, 60)}`,
         `/chat/${matchId}`
       );
-      sendEmailNotification(otherUser.uid, "message", user!.displayName || "Someone", `/chat/${matchId}`);
+      await notifyUser(otherUser.uid, {
+        type: "message",
+        title: "New message",
+        body: `${user!.displayName || "Someone"}: ${trimmed.slice(0, 80)}`,
+        url: `/chat/${matchId}`,
+        fromUserId: user!.uid,
+        fromName: user!.displayName || "Someone",
+      });
     }
   };
 

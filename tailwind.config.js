@@ -18,7 +18,7 @@ module.exports = {
         light: "#F4F7FF"
       },
       fontFamily: {
-        sans: ["Futura PT", "Futura", "Century Gothic", "ui-sans-serif", "system-ui", "sans-serif"]
+        sans: ["Nunito", "sans-serif"]
       }
     }
   },

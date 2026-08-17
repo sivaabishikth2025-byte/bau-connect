@@ -6,5 +6,13 @@
 
 body {
   background: #F4F7FF;
-  font-family: "Century Gothic", "Futura PT", "Nunito", ui-sans-serif, system-ui, sans-serif;
+  font-family: "Nunito", sans-serif;
+}
+
+html,
+button,
+input,
+textarea,
+select {
+  font-family: "Nunito", sans-serif;
 }

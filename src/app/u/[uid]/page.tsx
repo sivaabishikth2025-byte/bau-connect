@@ -1,13 +1,13 @@
 "use client";
 import { useEffect, useState } from "react";
-import { doc, getDoc, collection, query, where, getDocs, addDoc, serverTimestamp } from "firebase/firestore";
+import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { UserProfile } from "@/types";
-import { ArrowLeft, MapPin, Heart, X } from "lucide-react";
-import { sendPushNotification } from "@/lib/sendNotification";
-import { sendEmailNotification } from "@/lib/sendEmail";
+import { ArrowLeft, MapPin, UserPlus, MessageCircle } from "lucide-react";
+import { findFollowRequest, findMatchId, sendFollowRequest } from "@/lib/follow";
+import Link from "next/link";
 
 export default function FullProfile() {
   const { uid } = useParams<{ uid: string }>();
@@ -16,10 +16,11 @@ export default function FullProfile() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [photoIndex, setPhotoIndex] = useState(0);
-  const [action, setAction] = useState<"liked" | "passed" | null>(null);
   const [acting, setActing] = useState(false);
-  const [matchMsg, setMatchMsg] = useState("");
-  const [isMatch, setIsMatch] = useState(false);
+  const [followState, setFollowState] = useState<"none" | "requested" | "following">("none");
+  const [matchId, setMatchId] = useState<string | null>(null);
+
+  const isSelf = !!user && user.uid === uid;
 
   useEffect(() => {
     if (!uid) return;
@@ -29,57 +30,35 @@ export default function FullProfile() {
     });
   }, [uid]);
 
-  // Check if already matched
   useEffect(() => {
-    if (!user || !uid) return;
-    Promise.all([
-      getDocs(query(collection(db, "matches"), where("user1Id", "==", user.uid), where("user2Id", "==", uid))),
-      getDocs(query(collection(db, "matches"), where("user1Id", "==", uid), where("user2Id", "==", user.uid)))
-    ]).then(([s1, s2]) => {
-      if (!s1.empty || !s2.empty) setIsMatch(true);
-    });
-  }, [user, uid]);
-
-  const handleLike = async () => {
-    if (!user || !myProfile || !profile || acting) return;
-    setActing(true);
-    await addDoc(collection(db, "likes"), {
-      fromUserId: user.uid, toUserId: profile.uid, createdAt: serverTimestamp()
-    });
-    sendPushNotification(profile.uid, "Someone liked you! 💜",
-      `${myProfile.name} liked your profile on BAUdate`, "/liked-me");
-    sendEmailNotification(profile.uid, "like", myProfile.name, "/liked-me");
-
-    // Check mutual
-    const mutual = await getDocs(query(
-      collection(db, "likes"),
-      where("fromUserId", "==", profile.uid),
-      where("toUserId", "==", user.uid)
-    ));
-    if (!mutual.empty) {
-      const existing = await getDocs(query(
-        collection(db, "matches"),
-        where("user1Id", "in", [user.uid, profile.uid]),
-        where("user2Id", "in", [user.uid, profile.uid])
-      ));
-      if (existing.empty) {
-        await addDoc(collection(db, "matches"), {
-          user1Id: user.uid, user2Id: profile.uid, createdAt: serverTimestamp()
-        });
-        sendPushNotification(profile.uid, "It's a match! 💜",
-          `You and ${myProfile.name} liked each other!`, "/matches");
-        sendEmailNotification(profile.uid, "match", myProfile.name, "/matches");
-        setMatchMsg(`It's a match with ${profile.name}!`);
-        setTimeout(() => router.replace("/matches"), 2000);
+    if (!user || !uid || user.uid === uid) return;
+    (async () => {
+      const mid = await findMatchId(user.uid, uid);
+      if (mid) {
+        setMatchId(mid);
+        setFollowState("following");
         return;
       }
-    }
-    setAction("liked");
-    setActing(false);
-  };
+      const pending = await findFollowRequest(user.uid, uid);
+      setFollowState(pending ? "requested" : "none");
+    })();
+  }, [user, uid]);
 
-  const handlePass = () => {
-    setAction("passed");
+  const handleFollow = async () => {
+    if (!user || !myProfile || !profile || acting || isSelf) return;
+    setActing(true);
+    const result = await sendFollowRequest({
+      fromUserId: user.uid,
+      fromName: myProfile.name,
+      toUserId: profile.uid,
+    });
+    if (result.status === "following") {
+      setFollowState("following");
+      setMatchId(result.matchId || null);
+    } else {
+      setFollowState("requested");
+    }
+    setActing(false);
   };
 
   if (loading) return (
@@ -98,7 +77,6 @@ export default function FullProfile() {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-32">
-      {/* Back button */}
       <div className="fixed top-4 left-4 z-20">
         <button onClick={() => router.back()}
           className="bg-white/90 backdrop-blur rounded-full p-2.5 shadow-md hover:bg-white transition">
@@ -106,14 +84,6 @@ export default function FullProfile() {
         </button>
       </div>
 
-      {/* Match toast */}
-      {matchMsg && (
-        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50 bg-primary text-white px-6 py-3 rounded-2xl shadow-xl font-semibold text-sm animate-bounce">
-          {matchMsg} 💜 Redirecting...
-        </div>
-      )}
-
-      {/* Photo carousel */}
       <div className="relative w-full" style={{ height: "480px" }}>
         <img src={photos[photoIndex]} alt={profile.name} className="w-full h-full object-cover" />
         {photos.length > 1 && (
@@ -141,9 +111,18 @@ export default function FullProfile() {
         </div>
       </div>
 
-      {/* Info card */}
       <div className="max-w-lg mx-auto px-4 -mt-6 relative z-10">
         <div className="bg-white rounded-3xl shadow-xl p-6 space-y-5">
+          {profile.openTo && profile.openTo.length > 0 && (
+            <div>
+              <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Open to</p>
+              <div className="flex flex-wrap gap-2">
+                {profile.openTo.map(i => (
+                  <span key={i} className="bg-sky/10 text-sky text-sm font-semibold px-4 py-1.5 rounded-full border border-sky/20">{i}</span>
+                ))}
+              </div>
+            </div>
+          )}
           {profile.bio && (
             <div>
               <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">About</p>
@@ -180,7 +159,7 @@ export default function FullProfile() {
             <div>
               <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Gallery</p>
               <div className="grid grid-cols-3 gap-2">
-                {profile.gallery.map((p, i) => (
+                {profile.gallery.slice(0, 6).map((p, i) => (
                   <img key={i} src={p} alt="" className="w-full aspect-square object-cover rounded-2xl" />
                 ))}
               </div>
@@ -189,55 +168,31 @@ export default function FullProfile() {
         </div>
       </div>
 
-      {/* Fixed action bar — hidden for existing matches */}
-      {!action && !isMatch && (
-        <div className="fixed bottom-0 left-0 right-0 z-20 flex justify-center items-center gap-6 py-5 px-4"
-          style={{background:"linear-gradient(to top, rgba(244,247,255,1) 70%, transparent)"}}>
-          <button onClick={handlePass}
-            className="w-14 h-14 bg-white rounded-full shadow-lg flex items-center justify-center hover:scale-110 active:scale-95 transition border border-gray-100">
-            <X size={24} className="text-gray-400" />
-          </button>
-          <button onClick={handleLike} disabled={acting}
-            className="w-16 h-16 rounded-full shadow-xl flex items-center justify-center hover:scale-110 active:scale-95 transition disabled:opacity-60"
-            style={{background:"linear-gradient(135deg,#F15B47,#DBA631)"}}>
-            <Heart size={26} className="text-white fill-white" />
-          </button>
-        </div>
-      )}
-
-      {/* Already matched — show chat button instead */}
-      {isMatch && (
-        <div className="fixed bottom-0 left-0 right-0 z-20 flex justify-center py-5 px-4"
-          style={{background:"linear-gradient(to top, rgba(244,247,255,1) 70%, transparent)"}}>
-          <button onClick={() => router.back()}
-            className="flex items-center gap-2 bg-primary text-white rounded-2xl px-8 py-4 font-semibold shadow-lg hover:bg-primary/90 transition">
-            <Heart size={18} className="fill-white" /> You're matched · Go back to chat
-          </button>
-        </div>
-      )}
-
-      {/* Post-action feedback */}
-      {action === "liked" && (
-        <div className="fixed bottom-0 left-0 right-0 z-20 flex justify-center py-5 px-4"
-          style={{background:"linear-gradient(to top, rgba(244,247,255,1) 70%, transparent)"}}>
-          <div className="flex items-center gap-3 bg-white rounded-2xl px-6 py-4 shadow-lg border border-gray-100">
-            <Heart size={20} className="text-accent fill-accent" />
-            <p className="text-primary font-semibold text-sm">You liked {profile.name}!</p>
-            <button onClick={() => router.back()} className="text-sky text-sm font-medium hover:underline ml-2">Back</button>
-          </div>
-        </div>
-      )}
-      {action === "passed" && (
-        <div className="fixed bottom-0 left-0 right-0 z-20 flex justify-center py-5 px-4"
-          style={{background:"linear-gradient(to top, rgba(244,247,255,1) 70%, transparent)"}}>
-          <div className="flex items-center gap-3 bg-white rounded-2xl px-6 py-4 shadow-lg border border-gray-100">
-            <X size={20} className="text-gray-400" />
-            <p className="text-gray-600 font-semibold text-sm">Passed on {profile.name}</p>
-            <button onClick={() => router.back()} className="text-sky text-sm font-medium hover:underline ml-2">Back</button>
-          </div>
+      {!isSelf && (
+        <div className="fixed bottom-0 left-0 right-0 z-20 flex justify-center gap-3 py-5 px-4"
+          style={{ background: "linear-gradient(to top, rgba(244,247,255,1) 70%, transparent)" }}>
+          {followState === "following" && matchId ? (
+            <Link
+              href={`/chat/${matchId}`}
+              className="flex items-center gap-2 bg-primary text-white rounded-2xl px-8 py-4 font-semibold shadow-lg"
+            >
+              <MessageCircle size={18} /> Message
+            </Link>
+          ) : followState === "requested" ? (
+            <div className="bg-white rounded-2xl px-8 py-4 font-semibold text-gray-500 shadow-lg border border-gray-100">
+              Follow request sent
+            </div>
+          ) : (
+            <button
+              onClick={handleFollow}
+              disabled={acting || !user}
+              className="flex items-center gap-2 bg-primary text-white rounded-2xl px-8 py-4 font-semibold shadow-lg disabled:opacity-60"
+            >
+              <UserPlus size={18} /> Follow
+            </button>
+          )}
         </div>
       )}
     </div>
   );
 }
-
