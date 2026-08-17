@@ -13,13 +13,16 @@ function parseFrom(raw: string) {
 }
 
 export async function POST(req: NextRequest) {
-  const region = process.env.AWS_REGION || process.env.AWS_DEFAULT_REGION || "us-east-1";
+  // Do not use AWS_REGION. Netlify reserves it and it will not match SES us-east-1.
+  const region = process.env.SES_REGION || "us-east-1";
   const fromRaw = process.env.SES_FROM_EMAIL || process.env.AWS_SES_FROM_EMAIL;
+  const accessKeyId = process.env.SES_ACCESS_KEY_ID || process.env.AWS_ACCESS_KEY_ID;
+  const secretAccessKey = process.env.SES_SECRET_ACCESS_KEY || process.env.AWS_SECRET_ACCESS_KEY;
 
   if (!fromRaw) {
     return NextResponse.json({ error: "SES_FROM_EMAIL is not set" }, { status: 500 });
   }
-  if (!process.env.AWS_ACCESS_KEY_ID || !process.env.AWS_SECRET_ACCESS_KEY) {
+  if (!accessKeyId || !secretAccessKey) {
     return NextResponse.json({ error: "AWS credentials are not set" }, { status: 500 });
   }
 
@@ -99,7 +102,10 @@ export async function POST(req: NextRequest) {
   `;
 
   try {
-    const client = new SESv2Client({ region });
+    const client = new SESv2Client({
+      region,
+      credentials: { accessKeyId, secretAccessKey },
+    });
     const results = [];
 
     for (const email of recipients) {
