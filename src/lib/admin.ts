@@ -1,6 +1,13 @@
-/** Sole campus admin — only this login sees Admin and can manage the app. */
-export const ADMIN_EMAIL = "smylavarapu@stu.bau.edu";
+/** Campus admins — these logins see Admin and can manage the app. */
+export const ADMIN_EMAILS = [
+  "smylavarapu@stu.bau.edu",
+  "rmckie@bau.edu",
+] as const;
+
+/** @deprecated use ADMIN_EMAILS */
+export const ADMIN_EMAIL = ADMIN_EMAILS[0];
 
 export function isAdminEmail(email?: string | null) {
-  return (email || "").trim().toLowerCase() === ADMIN_EMAIL;
+  const normalized = (email || "").trim().toLowerCase();
+  return ADMIN_EMAILS.some((adminEmail) => adminEmail === normalized);
 }

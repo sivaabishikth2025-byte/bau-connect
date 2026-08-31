@@ -121,7 +121,8 @@ export default function ActivitiesPage() {
   };
 
   const deletePost = async (a: Activity & { id: string }) => {
-    if (!isAdmin) return;
+    if (!user || (a.authorId !== user.uid && !isAdmin)) return;
+    if (!window.confirm("Delete this post? This cannot be undone.")) return;
     await deleteDoc(doc(db, "activities", a.id));
     await load();
   };

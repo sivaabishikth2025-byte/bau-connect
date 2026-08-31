@@ -127,14 +127,16 @@ export default function FeedPost({
           </span>
         </div>
         {userId && (userId === a.authorId || isAdmin) && (
-          <button onClick={() => onEdit(a)} className="p-2 text-gray-400 hover:text-primary rounded-xl hover:bg-gray-50">
-            <Pencil size={16} />
-          </button>
-        )}
-        {isAdmin && onDelete && (
-          <button onClick={() => onDelete(a)} className="p-2 text-accent hover:bg-accent/10 rounded-xl" title="Delete post">
-            <Trash2 size={16} />
-          </button>
+          <>
+            <button onClick={() => onEdit(a)} className="p-2 text-gray-400 hover:text-primary rounded-xl hover:bg-gray-50" title="Edit post">
+              <Pencil size={16} />
+            </button>
+            {onDelete && (
+              <button onClick={() => onDelete(a)} className="p-2 text-accent hover:bg-accent/10 rounded-xl" title="Delete post">
+                <Trash2 size={16} />
+              </button>
+            )}
+          </>
         )}
       </div>
       <div className="px-5 pb-4">
