@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useMemo, useState, Suspense } from "react";
+import { useEffect, useMemo, useRef, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
@@ -20,35 +20,32 @@ import {
 import { VolunteerJob } from "@/types";
 import {
   ExternalLink, Navigation, Train,
-  HandHeart, Users, Building2, Landmark
+  HandHeart, Users, LocateFixed, Building2, Landmark
 } from "lucide-react";
 import Link from "next/link";
 
 type SpotKind = "campus" | "transit" | "area";
-type ListTab = "metro" | "explore" | "campus";
 
 function MapContent() {
   const searchParams = useSearchParams();
   const spotParam = searchParams.get("spot");
   const interactiveUrl = process.env.NEXT_PUBLIC_BAU_INTERACTIVE_MAP_URL;
+  const detailRef = useRef<HTMLDivElement>(null);
 
   const [selectedId, setSelectedId] = useState<string>("bau-campus");
-  const [listTab, setListTab] = useState<ListTab>("metro");
   const [floorFilter, setFloorFilter] = useState<string>("all");
   const [volunteerJobs, setVolunteerJobs] = useState<(VolunteerJob & { id: string })[]>([]);
 
-  const selectSpot = (id: string, tab?: ListTab) => {
+  const selectSpot = (id: string) => {
     setSelectedId(id);
-    if (tab) setListTab(tab);
-    else if (id === "bau-campus") setListTab("campus");
-    else if (TRANSIT_SPOTS.some(s => s.id === id)) setListTab("metro");
-    else setListTab("explore");
+    requestAnimationFrame(() => {
+      detailRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    });
   };
 
   useEffect(() => {
     if (spotParam) {
       setSelectedId("bau-campus");
-      setListTab("campus");
       const room = CAMPUS_LOCATIONS.find(c => c.id === spotParam);
       if (room) setFloorFilter(room.floor);
     }
@@ -114,7 +111,7 @@ function MapContent() {
         <div>
           <h1 className="text-3xl font-black text-white">BAU Connect Map</h1>
           <p className="text-white/50 text-sm mt-1">
-            Google Maps — select a location in the right panel. Map and details always match.
+            Google Maps — pick any location below and it shows on the map and in the side panel.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -167,188 +164,201 @@ function MapContent() {
         </div>
       )}
 
-      <div className="grid lg:grid-cols-[1.55fr_1fr] gap-4 mb-6 items-stretch">
+      <div className="flex flex-wrap items-center gap-2 mb-3">
+        <span className="text-white/40 text-[11px] font-bold uppercase tracking-wide">Now viewing</span>
+        <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold bg-white text-primary">
+          {spotKind === "campus" && <span className="w-2 h-2 rounded-full bg-sky" />}
+          {spotKind === "transit" && <Train size={12} className="text-secondary" />}
+          {spotKind === "area" && <Landmark size={12} className="text-accent" />}
+          {selectedTitle}
+        </span>
+        <button
+          type="button"
+          onClick={() => selectSpot("bau-campus")}
+          className="ml-auto inline-flex items-center gap-1 px-3 py-2 rounded-full text-[11px] font-bold bg-white/10 text-white/80"
+        >
+          <LocateFixed size={12} /> Back to campus
+        </button>
+      </div>
+
+      <div className="grid lg:grid-cols-[1.6fr_1fr] gap-4 mb-6">
         <GoogleMapEmbed
           key={`map-${selectedId}`}
           query={mapQuery}
           zoom={spotKind === "campus" ? 17 : 16}
           title={selectedTitle}
-          interactive={false}
         />
 
-        <div className="flex flex-col gap-3 min-h-0" style={{ maxHeight: "min(72vh, 720px)" }}>
-          {/* Selected location details */}
-          <div key={`detail-${selectedId}`} className="bg-white rounded-3xl shadow-lg p-5 shrink-0">
-            {spotKind === "campus" && (
-              <>
-                <p className="text-[11px] font-bold uppercase tracking-wide text-sky mb-1">Campus</p>
-                <h2 className="font-black text-primary text-lg mb-1">{BAU_CAMPUS.name}</h2>
-                <p className="text-sm text-gray-500 mb-2">{BAU_CAMPUS.address}</p>
-                {highlightedRoom && (
-                  <div className="mb-3 rounded-2xl bg-sky/10 border border-sky/20 p-3">
-                    <p className="text-xs font-bold text-sky">Looking for</p>
-                    <p className="font-bold text-primary text-sm">{highlightedRoom.name}</p>
-                    <p className="text-xs text-gray-500">Floor {highlightedRoom.floor}</p>
-                  </div>
-                )}
-              </>
-            )}
-
-            {spotKind === "transit" && selectedTransit && (
-              <>
-                <p className="text-[11px] font-bold uppercase tracking-wide text-secondary mb-1 flex items-center gap-1">
-                  <Train size={12} /> WMATA Metro
-                </p>
-                <h2 className="font-black text-primary text-xl mb-1">{selectedTransit.name}</h2>
-                <p className="text-sm text-gray-600 leading-relaxed">{selectedTransit.note}</p>
-              </>
-            )}
-
-            {spotKind === "area" && selectedLandmark && (
-              <>
-                <p className="text-[11px] font-bold uppercase tracking-wide text-accent mb-1 flex items-center gap-1">
-                  <Landmark size={12} /> Explore DC
-                </p>
-                <h2 className="font-black text-primary text-xl mb-1">{selectedLandmark.name}</h2>
-                <p className="text-sm text-gray-600 leading-relaxed">{selectedLandmark.note}</p>
-              </>
-            )}
-
-            <a
-              href={spotKind === "campus"
-                ? googleMapsDirectionsUrl(BAU_CAMPUS.address)
-                : googleMapsDirectionsUrl(mapQuery, BAU_CAMPUS.address, "walking")}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-4 block text-center bg-primary text-white font-bold text-sm py-2.5 rounded-2xl"
-            >
-              {spotKind === "campus" ? "Get directions to campus" : "Walk from campus"}
-            </a>
-          </div>
-
-          {/* Location picker — drives map + panel */}
-          <div className="bg-white rounded-3xl shadow-lg p-4 flex flex-col flex-1 min-h-0">
-            <div className="flex gap-1 p-1 bg-gray-100 rounded-2xl mb-3 shrink-0">
-              {([
-                { id: "metro" as const, label: "Metro", icon: Train },
-                { id: "explore" as const, label: "Explore DC", icon: Landmark },
-                { id: "campus" as const, label: "Campus", icon: Building2 },
-              ]).map(tab => (
-                <button
-                  key={tab.id}
-                  type="button"
-                  onClick={() => setListTab(tab.id)}
-                  className={`flex-1 flex items-center justify-center gap-1 py-2 rounded-xl text-[11px] font-bold transition ${
-                    listTab === tab.id ? "bg-white text-primary shadow-sm" : "text-gray-500"
-                  }`}
-                >
-                  <tab.icon size={12} />
-                  {tab.label}
-                </button>
-              ))}
-            </div>
-
-            <ul className="space-y-1 overflow-y-auto flex-1 pr-1 min-h-0">
-              {listTab === "metro" && TRANSIT_SPOTS.map(s => (
-                <li key={s.id}>
-                  <button
-                    type="button"
-                    onClick={() => selectSpot(s.id, "metro")}
-                    className={`w-full text-left p-2.5 rounded-xl border transition ${
-                      selectedId === s.id ? "border-secondary bg-secondary/10" : "border-gray-100 hover:border-secondary/40"
-                    }`}
-                  >
-                    <p className="font-semibold text-gray-900 text-sm">{s.name}</p>
-                    <p className="text-xs text-gray-500 mt-0.5 line-clamp-1">{s.note}</p>
-                  </button>
-                </li>
-              ))}
-
-              {listTab === "explore" && EXPLORE_DC.map(s => (
-                <li key={s.id}>
-                  <button
-                    type="button"
-                    onClick={() => selectSpot(s.id, "explore")}
-                    className={`w-full text-left p-2.5 rounded-xl border transition ${
-                      selectedId === s.id ? "border-accent bg-accent/10" : "border-gray-100 hover:border-accent/40"
-                    }`}
-                  >
-                    <p className="font-semibold text-gray-900 text-sm">{s.name}</p>
-                    <p className="text-xs text-gray-500 mt-0.5 line-clamp-1">{s.note}</p>
-                  </button>
-                </li>
-              ))}
-
-              {listTab === "campus" && (
-                <>
-                  <li>
-                    <button
-                      type="button"
-                      onClick={() => selectSpot("bau-campus", "campus")}
-                      className={`w-full text-left p-2.5 rounded-xl border transition mb-2 ${
-                        selectedId === "bau-campus" ? "border-sky bg-sky/10" : "border-gray-100 hover:border-sky/40"
-                      }`}
-                    >
-                      <p className="font-semibold text-gray-900 text-sm">{BAU_CAMPUS.name}</p>
-                      <p className="text-xs text-gray-500 mt-0.5">{BAU_CAMPUS.address}</p>
-                    </button>
-                  </li>
-                  <li className="flex gap-1.5 flex-wrap mb-2 px-1">
-                    {floors.map(f => (
-                      <button
-                        key={f}
-                        type="button"
-                        onClick={() => setFloorFilter(f)}
-                        className={`shrink-0 px-2.5 py-1 rounded-full text-[10px] font-bold transition ${
-                          floorFilter === f ? "bg-primary text-white" : "bg-gray-100 text-gray-500"
-                        }`}
-                      >
-                        {f === "all" ? "All" : `Fl ${f}`}
-                      </button>
-                    ))}
-                  </li>
-                  {rooms.map(c => (
-                    <li key={c.id}>
-                      <div className={`p-2.5 rounded-xl border ${
-                        spotParam === c.id ? "border-primary bg-primary/5" : "border-gray-100"
-                      }`}>
-                        <p className="font-semibold text-gray-900 text-sm">{c.name}</p>
-                        <p className="text-xs text-gray-500 mt-0.5">Floor {c.floor}</p>
-                      </div>
-                    </li>
-                  ))}
-                </>
+        <div
+          ref={detailRef}
+          key={`detail-${selectedId}`}
+          className="bg-white rounded-3xl shadow-lg p-5 flex flex-col min-h-[280px]"
+        >
+          {spotKind === "campus" && (
+            <>
+              <p className="text-[11px] font-bold uppercase tracking-wide text-sky mb-1">Campus</p>
+              <h2 className="font-black text-primary text-lg mb-1">{BAU_CAMPUS.name}</h2>
+              <p className="text-sm text-gray-500 mb-3">{BAU_CAMPUS.address}</p>
+              <p className="text-sm text-gray-600 leading-relaxed mb-4">
+                BAU is one downtown building. Rooms and volunteer shifts are listed by floor below.
+              </p>
+              {highlightedRoom && (
+                <div className="mb-4 rounded-2xl bg-sky/10 border border-sky/20 p-3">
+                  <p className="text-xs font-bold text-sky">Looking for</p>
+                  <p className="font-bold text-primary text-sm">{highlightedRoom.name}</p>
+                  <p className="text-xs text-gray-500">Floor {highlightedRoom.floor} · {highlightedRoom.blurb}</p>
+                </div>
               )}
-            </ul>
-          </div>
+            </>
+          )}
+
+          {spotKind === "transit" && selectedTransit && (
+            <>
+              <p className="text-[11px] font-bold uppercase tracking-wide text-secondary mb-1 flex items-center gap-1">
+                <Train size={12} /> WMATA Metro
+              </p>
+              <h2 className="font-black text-primary text-xl mb-1">{selectedTransit.name}</h2>
+              <p className="text-sm text-gray-600 leading-relaxed mb-4">{selectedTransit.note}</p>
+            </>
+          )}
+
+          {spotKind === "area" && selectedLandmark && (
+            <>
+              <p className="text-[11px] font-bold uppercase tracking-wide text-accent mb-1 flex items-center gap-1">
+                <Landmark size={12} /> Explore DC
+              </p>
+              <h2 className="font-black text-primary text-xl mb-1">{selectedLandmark.name}</h2>
+              <p className="text-sm text-gray-600 leading-relaxed mb-4">{selectedLandmark.note}</p>
+            </>
+          )}
+
+          <p className="text-xs text-gray-400 mb-4 mt-auto">
+            Showing <strong className="text-gray-600">{selectedTitle}</strong> on Google Maps.
+          </p>
+
+          <a
+            href={spotKind === "campus"
+              ? googleMapsDirectionsUrl(BAU_CAMPUS.address)
+              : googleMapsDirectionsUrl(mapQuery, BAU_CAMPUS.address, "walking")}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-center bg-primary text-white font-bold text-sm py-2.5 rounded-2xl"
+          >
+            {spotKind === "campus" ? "Get directions to campus" : "Walk from campus"}
+          </a>
         </div>
       </div>
 
-      <div className="bg-white rounded-3xl shadow-lg p-5">
-        <h2 className="font-black text-primary text-lg mb-1 flex items-center gap-2">
-          <HandHeart size={18} className="text-secondary" /> Volunteer board
-        </h2>
-        <p className="text-gray-500 text-sm mb-3">Staff-posted requirements. Apply on Volunteers</p>
-        {volunteerJobs.length === 0 ? (
-          <p className="text-sm text-gray-400">No volunteer requirements posted yet.</p>
-        ) : (
-          <ul className="space-y-2 max-h-48 overflow-y-auto pr-1">
-            {volunteerJobs.slice(0, 10).map(j => {
-              const spot = CAMPUS_LOCATIONS.find(c => c.id === j.campusSpotId);
-              return (
-                <li key={j.id} className="p-3 rounded-2xl border border-gray-100">
-                  <p className="font-semibold text-gray-900 text-sm">{j.title}</p>
-                  <p className="text-xs text-gray-500 mt-0.5">
-                    {volunteerCategoryMeta(j.category).label} · {spot ? `${spot.name} · Floor ${spot.floor}` : j.location || "Campus"}
-                  </p>
-                </li>
-              );
-            })}
+      <div className="grid md:grid-cols-2 gap-4 mb-4">
+        <div className="bg-white rounded-3xl shadow-lg p-5">
+          <h2 className="font-black text-primary text-lg mb-1 flex items-center gap-2">
+            <Train size={18} className="text-secondary" /> All Metro stations
+          </h2>
+          <p className="text-gray-500 text-sm mb-3">Tap a station — Google Maps and the panel update</p>
+          <ul className="space-y-1.5 max-h-72 overflow-y-auto pr-1">
+            {TRANSIT_SPOTS.map(s => (
+              <li key={s.id}>
+                <button
+                  type="button"
+                  onClick={() => selectSpot(s.id)}
+                  className={`w-full text-left p-3 rounded-2xl border transition ${
+                    selectedId === s.id ? "border-secondary bg-secondary/10" : "border-gray-100 hover:border-secondary/40"
+                  }`}
+                >
+                  <p className="font-semibold text-gray-900 text-sm">{s.name}</p>
+                  <p className="text-xs text-gray-500 mt-0.5">{s.note}</p>
+                </button>
+              </li>
+            ))}
           </ul>
-        )}
-        <Link href="/volunteers" className="inline-block mt-3 text-sky text-sm font-bold">
-          Browse volunteer board →
-        </Link>
+        </div>
+        <div className="bg-white rounded-3xl shadow-lg p-5">
+          <h2 className="font-black text-primary text-lg mb-1 flex items-center gap-2">
+            <Landmark size={18} className="text-accent" /> Explore DC
+          </h2>
+          <p className="text-gray-500 text-sm mb-3">Museums, monuments, and hangouts</p>
+          <ul className="space-y-1.5 max-h-72 overflow-y-auto pr-1">
+            {EXPLORE_DC.map(s => (
+              <li key={s.id}>
+                <button
+                  type="button"
+                  onClick={() => selectSpot(s.id)}
+                  className={`w-full text-left p-3 rounded-2xl border transition ${
+                    selectedId === s.id ? "border-accent bg-accent/10" : "border-gray-100 hover:border-accent/40"
+                  }`}
+                >
+                  <p className="font-semibold text-gray-900 text-sm">{s.name}</p>
+                  <p className="text-xs text-gray-500 mt-0.5">{s.note}</p>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-4">
+        <div className="bg-white rounded-3xl shadow-lg p-5">
+          <h2 className="font-black text-primary text-lg mb-1 flex items-center gap-2">
+            <Building2 size={18} className="text-sky" /> Floor directory
+          </h2>
+          <p className="text-gray-500 text-sm mb-3">Indoor rooms inside the same building</p>
+          <div className="flex gap-2 overflow-x-auto pb-2 mb-3 scrollbar-hide">
+            {floors.map(f => (
+              <button
+                key={f}
+                type="button"
+                onClick={() => setFloorFilter(f)}
+                className={`shrink-0 px-3 py-1.5 rounded-full text-[11px] font-bold transition ${
+                  floorFilter === f ? "bg-primary text-white" : "bg-gray-100 text-gray-500"
+                }`}
+              >
+                {f === "all" ? "All floors" : `Floor ${f}`}
+              </button>
+            ))}
+          </div>
+          <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
+            {rooms.map(c => (
+              <div
+                key={c.id}
+                className={`p-3 rounded-2xl border ${
+                  spotParam === c.id ? "border-primary bg-primary/5" : "border-gray-100"
+                }`}
+              >
+                <p className="font-bold text-gray-900 text-sm">{c.name}</p>
+                <p className="text-xs text-gray-500 mt-0.5">Floor {c.floor} · {c.blurb}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="bg-white rounded-3xl shadow-lg p-5">
+          <h2 className="font-black text-primary text-lg mb-1 flex items-center gap-2">
+            <HandHeart size={18} className="text-secondary" /> Volunteer board
+          </h2>
+          <p className="text-gray-500 text-sm mb-3">
+            Staff-posted requirements. Apply on Volunteers
+          </p>
+          {volunteerJobs.length === 0 ? (
+            <p className="text-sm text-gray-400">No volunteer requirements posted yet.</p>
+          ) : (
+            <ul className="space-y-2 max-h-72 overflow-y-auto pr-1">
+              {volunteerJobs.slice(0, 10).map(j => {
+                const spot = CAMPUS_LOCATIONS.find(c => c.id === j.campusSpotId);
+                return (
+                  <li key={j.id} className="p-3 rounded-2xl border border-gray-100">
+                    <p className="font-semibold text-gray-900 text-sm">{j.title}</p>
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      {volunteerCategoryMeta(j.category).label} · {spot ? `${spot.name} · Floor ${spot.floor}` : j.location || "Campus"}
+                    </p>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+          <Link href="/volunteers" className="inline-block mt-3 text-sky text-sm font-bold">
+            Browse volunteer board →
+          </Link>
+        </div>
       </div>
     </div>
   );
