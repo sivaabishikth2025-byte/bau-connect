@@ -1,5 +1,3 @@
-import { Resend } from "resend";
-
 export function parseFrom(raw: string) {
   const match = raw.match(/^(.*)<([^>]+)>$/);
   if (match) {
@@ -12,39 +10,47 @@ export function parseFrom(raw: string) {
 }
 
 export function getMailFrom() {
-  return (
-    process.env.EMAIL_FROM ||
-    process.env.RESEND_FROM ||
-    "BAU Connect <notifications@baustudentconnect.com>"
-  );
+  return process.env.EMAIL_FROM || "BAU Connect <notifications@baustudentconnect.com>";
 }
 
 export function mailConfigured() {
-  return Boolean(process.env.RESEND_API_KEY);
+  return Boolean(process.env.BREVO_API_KEY);
 }
 
+/** Brevo free plan: 300 emails/day — no credit card required. */
 export async function sendMail(opts: {
   to: string;
   subject: string;
   html: string;
   text: string;
 }) {
-  const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey) throw new Error("RESEND_API_KEY is not set");
+  const apiKey = process.env.BREVO_API_KEY;
+  if (!apiKey) throw new Error("BREVO_API_KEY is not set");
 
-  const from = getMailFrom();
-  const resend = new Resend(apiKey);
-  const { data, error } = await resend.emails.send({
-    from,
-    to: opts.to,
-    subject: opts.subject,
-    html: opts.html,
-    text: opts.text,
-    replyTo: parseFrom(from).email,
+  const from = parseFrom(getMailFrom());
+  const res = await fetch("https://api.brevo.com/v3/smtp/email", {
+    method: "POST",
+    headers: {
+      "api-key": apiKey,
+      "content-type": "application/json",
+      accept: "application/json",
+    },
+    body: JSON.stringify({
+      sender: { name: from.name, email: from.email },
+      to: [{ email: opts.to }],
+      replyTo: { email: from.email, name: from.name },
+      subject: opts.subject,
+      htmlContent: opts.html,
+      textContent: opts.text,
+    }),
   });
 
-  if (error) throw new Error(error.message);
-  return data?.id ?? "sent";
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const msg = data?.message || data?.error || `Brevo error ${res.status}`;
+    throw new Error(msg);
+  }
+  return data?.messageId ?? "sent";
 }
 
 export function mailCard(inner: string, subject: string) {

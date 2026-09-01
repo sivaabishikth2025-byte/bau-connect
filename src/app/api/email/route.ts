@@ -3,7 +3,7 @@ import { getMailFrom, mailConfigured, sendMail } from "@/lib/mail";
 
 export async function POST(req: NextRequest) {
   if (!mailConfigured()) {
-    return NextResponse.json({ error: "RESEND_API_KEY is not set" }, { status: 500 });
+    return NextResponse.json({ error: "BREVO_API_KEY is not set" }, { status: 500 });
   }
   if (!getMailFrom()) {
     return NextResponse.json({ error: "EMAIL_FROM is not set" }, { status: 500 });
