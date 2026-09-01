@@ -10,9 +10,13 @@ import { fileURLToPath } from "node:url";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = resolve(__dirname, "..");
 
-const LOGO_SOURCE_CANDIDATES = [
+const LOGO_DARK_SOURCE_CANDIDATES = [
   "C:\\Users\\Admin\\Downloads\\White Blue Professional Internship Job Fair Brochure.png",
   resolve(root, "public", "bau-logo-source.png"),
+];
+const LOGO_LIGHT_SOURCE_CANDIDATES = [
+  "C:\\Users\\Admin\\Downloads\\LOGOS & ICONS (1).png",
+  resolve(root, "public", "bau-logo-light-source.png"),
 ];
 const FAVICON_SOURCE_CANDIDATES = [
   "C:\\Users\\Admin\\Downloads\\LOGOS & ICONS.png",
@@ -111,7 +115,8 @@ async function toLightLogo(input) {
   });
 }
 
-const logoSource = pickSource(LOGO_SOURCE_CANDIDATES);
+const logoDarkSource = pickSource(LOGO_DARK_SOURCE_CANDIDATES);
+const logoLightSource = pickSource(LOGO_LIGHT_SOURCE_CANDIDATES);
 const faviconSource = pickSource(FAVICON_SOURCE_CANDIDATES);
 
 const logoDarkOut = resolve(root, "public", "bau-logo-dark.png");
@@ -122,11 +127,11 @@ const appleOut = resolve(root, "src", "app", "apple-icon.png");
 const faviconOut = resolve(root, "public", "favicon.png");
 const applePublicOut = resolve(root, "public", "apple-icon.png");
 
-const logoDarkBuffer = await (await removeBackground(logoSource, NAVY, 42)).trim().png().toBuffer();
+const logoDarkBuffer = await (await removeBackground(logoDarkSource, NAVY, 42)).trim().png().toBuffer();
 await sharp(logoDarkBuffer).toFile(logoDarkOut);
 await sharp(logoDarkBuffer).toFile(logoDefaultOut);
 
-const logoLightBuffer = await (await toLightLogo(logoDarkBuffer)).png().toBuffer();
+const logoLightBuffer = await (await removeBackground(logoLightSource, WHITE, 32)).trim().png().toBuffer();
 await sharp(logoLightBuffer).toFile(logoLightOut);
 
 const crestPipeline = (await removeBackground(faviconSource, WHITE, 28))
