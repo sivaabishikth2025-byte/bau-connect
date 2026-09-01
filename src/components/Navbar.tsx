@@ -63,7 +63,7 @@ export default function Navbar() {
       <div className="max-w-screen-xl mx-auto flex items-center justify-around md:justify-between px-1 md:px-6 py-2 md:py-3">
         <div className="hidden md:flex items-center gap-2">
           <Link href="/landing" className="flex items-center gap-2">
-            <img src="/bau-logo.png" alt="BAU Connect" style={{ height: 40, objectFit: "contain" }} className="cursor-pointer hover:opacity-80 transition" />
+            <img src="/bau-logo.png" alt="BAU Connect" style={{ height: 44, width: "auto", objectFit: "contain" }} className="cursor-pointer hover:opacity-80 transition" />
             <span className="font-black text-primary text-sm tracking-tight">BAU Connect</span>
           </Link>
         </div>

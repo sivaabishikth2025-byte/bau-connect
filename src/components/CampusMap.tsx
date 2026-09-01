@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { BAU_CAMPUS, DC_SPOTS } from "@/lib/constants";
-import { BASEMAPS, LAYER_COLORS, type BasemapId, type MapLayerId, type MapPin } from "@/lib/basemaps";
+import { LAYER_COLORS, getBasemap, type BasemapId, type MapLayerId, type MapPin } from "@/lib/basemaps";
 
 export type { BasemapId, MapLayerId, MapPin };
 
@@ -86,7 +86,7 @@ export default function CampusMap({
       maxZoom: 18,
     }).setView([BAU_CAMPUS.lat, BAU_CAMPUS.lng], 14);
 
-    const style = BASEMAPS.find(b => b.id === basemap) || BASEMAPS[0];
+    const style = getBasemap(basemap);
     tileRef.current = L.tileLayer(style.url, {
       attribution: style.attribution,
       maxZoom: style.maxZoom || 20,
@@ -125,7 +125,7 @@ export default function CampusMap({
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
-    const style = BASEMAPS.find(b => b.id === basemap) || BASEMAPS[0];
+    const style = getBasemap(basemap);
     if (tileRef.current) map.removeLayer(tileRef.current);
     tileRef.current = L.tileLayer(style.url, {
       attribution: style.attribution,

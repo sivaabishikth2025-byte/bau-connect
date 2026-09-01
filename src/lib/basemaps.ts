@@ -13,49 +13,69 @@ export interface MapPin {
   meta?: string;
 }
 
-export const LAYER_COLORS: Record<MapLayerId, string> = {
-  campus: "#28AAE2",
-  transit: "#C9A227",
-  area: "#E85D4C",
-};
-
-export const BASEMAPS: {
+export interface BasemapStyle {
   id: BasemapId;
   label: string;
   url: string;
   attribution: string;
   maxZoom?: number;
   subdomains?: string;
-}[] = [
+}
+
+export const LAYER_COLORS: Record<MapLayerId, string> = {
+  campus: "#28AAE2",
+  transit: "#C9A227",
+  area: "#E85D4C",
+};
+
+const CARTO_KEY = process.env.NEXT_PUBLIC_CARTO_API_KEY?.trim();
+
+const OSM_FALLBACK: Pick<BasemapStyle, "url" | "attribution" | "maxZoom" | "subdomains"> = {
+  url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+  attribution: "&copy; OpenStreetMap contributors",
+  maxZoom: 19,
+  subdomains: "abc",
+};
+
+function cartoUrl(path: string) {
+  if (!CARTO_KEY) return null;
+  return `https://{s}.basemaps.cartocdn.com/${path}/{z}/{x}/{y}{r}.png?key=${encodeURIComponent(CARTO_KEY)}`;
+}
+
+function cartoOrOsm(path: string): Pick<BasemapStyle, "url" | "attribution" | "maxZoom" | "subdomains"> {
+  const url = cartoUrl(path);
+  if (url) {
+    return {
+      url,
+      attribution: "&copy; OpenStreetMap contributors &copy; CARTO",
+      maxZoom: 20,
+      subdomains: "abcd",
+    };
+  }
+  return OSM_FALLBACK;
+}
+
+export const BASEMAPS: BasemapStyle[] = [
   {
     id: "streets",
     label: "Streets",
-    url: "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
-    attribution: "&copy; OSM &copy; CARTO",
-    maxZoom: 20,
-    subdomains: "abcd",
+    ...cartoOrOsm("rastertiles/voyager"),
   },
   {
     id: "light",
     label: "Light",
-    url: "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
-    attribution: "&copy; OSM &copy; CARTO",
-    maxZoom: 20,
-    subdomains: "abcd",
+    ...cartoOrOsm("light_all"),
   },
   {
     id: "dark",
     label: "Dark",
-    url: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
-    attribution: "&copy; OSM &copy; CARTO",
-    maxZoom: 20,
-    subdomains: "abcd",
+    ...cartoOrOsm("dark_all"),
   },
   {
     id: "terrain",
     label: "Terrain",
     url: "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png",
-    attribution: "&copy; OSM &copy; OpenTopoMap",
+    attribution: "&copy; OpenStreetMap contributors &copy; OpenTopoMap",
     maxZoom: 17,
     subdomains: "abc",
   },
@@ -67,3 +87,7 @@ export const BASEMAPS: {
     maxZoom: 19,
   },
 ];
+
+export function getBasemap(id: BasemapId): BasemapStyle {
+  return BASEMAPS.find(b => b.id === id) || BASEMAPS[0];
+}

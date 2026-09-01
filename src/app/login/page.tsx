@@ -69,7 +69,7 @@ export default function Login() {
         {/* Logo */}
         <div className="flex justify-center mb-6">
           <div className="bg-white rounded-2xl shadow p-3">
-            <Image src="/bau-logo.png" alt="BAU Logo" width={64} height={64} className="object-contain" />
+            <Image src="/bau-logo.png" alt="BAU Logo" width={220} height={72} className="h-16 w-auto object-contain" />
           </div>
         </div>
 
