@@ -4,7 +4,6 @@ import { useRouter } from "next/navigation";
 import { createUserWithEmailAndPassword, sendEmailVerification } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import Link from "next/link";
-import Image from "next/image";
 
 export default function Signup() {
   const router = useRouter();
@@ -67,7 +66,7 @@ export default function Signup() {
         {/* Logo */}
         <div className="flex justify-center mb-6">
           <div className="bg-white rounded-2xl shadow p-3">
-            <Image src="/bau-logo.png" alt="BAU Logo" width={220} height={72} className="h-16 w-auto object-contain" />
+            <img src="/bau-logo.png" alt="BAU Logo" className="h-16 w-auto object-contain" />
           </div>
         </div>
 
