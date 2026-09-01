@@ -2,7 +2,7 @@ type BauLogoSize = "nav" | "auth" | "landing" | "footer";
 type BauLogoTone = "light" | "dark";
 
 const SIZES: Record<BauLogoSize, { height: number; maxWidth: number }> = {
-  nav: { height: 72, maxWidth: 400 },
+  nav: { height: 64, maxWidth: 300 },
   auth: { height: 100, maxWidth: 280 },
   landing: { height: 80, maxWidth: 340 },
   footer: { height: 88, maxWidth: 420 },

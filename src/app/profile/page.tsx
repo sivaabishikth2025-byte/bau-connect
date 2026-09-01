@@ -110,7 +110,7 @@ export default function Profile() {
   const gallery = profile.gallery || [];
 
   return (
-    <div className="min-h-screen pb-20 md:pb-0 md:pt-16" style={{background:"#BBD3EE"}}>
+    <div className="min-h-screen pb-20 md:pb-0 md:pt-20" style={{background:"#BBD3EE"}}>
       <Navbar />
       <div className="max-w-lg mx-auto px-4 pt-6 space-y-4">
 

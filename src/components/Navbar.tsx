@@ -60,12 +60,11 @@ export default function Navbar() {
   }, [pathname]);
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 shadow-lg z-50 md:top-0 md:bottom-auto md:border-t-0 md:border-b md:shadow-md">
-      <div className="max-w-screen-xl mx-auto flex items-center justify-around md:justify-between px-1 md:px-6 py-2 md:py-3">
-        <div className="hidden md:flex items-center gap-2">
-          <Link href="/landing" className="flex items-center gap-2">
-            <BauLogo size="nav" alt="BAU Connect" className="cursor-pointer hover:opacity-90 transition" />
-            <span className="font-black text-primary text-sm tracking-tight">BAU Connect</span>
+    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 shadow-lg z-50 md:top-0 md:bottom-auto md:border-t-0 md:border-b md:shadow-md md:h-20">
+      <div className="max-w-screen-xl mx-auto flex h-full items-center justify-around md:justify-between px-1 md:px-6 py-2 md:py-0">
+        <div className="hidden md:flex items-center shrink-0 min-w-0">
+          <Link href="/landing" className="flex items-center shrink-0">
+            <BauLogo size="nav" alt="BAU Connect" className="cursor-pointer hover:opacity-90 transition shrink-0" />
           </Link>
         </div>
         <div className="flex items-center gap-0 md:gap-1 w-full md:w-auto justify-around md:justify-end overflow-visible">

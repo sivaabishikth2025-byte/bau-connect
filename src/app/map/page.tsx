@@ -368,7 +368,7 @@ function MapContent() {
 
 export default function MapPage() {
   return (
-    <div className="min-h-screen md:pt-16 relative overflow-hidden" style={{ background: appPageBg }}>
+    <div className="min-h-screen md:pt-20 relative overflow-hidden" style={{ background: appPageBg }}>
       <AppStarfield />
       <Navbar />
       <Suspense

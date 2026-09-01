@@ -110,7 +110,7 @@ export default function Dashboard() {
   const displayPhotos = displayUser?.photos?.length ? displayUser.photos : displayUser ? [displayUser.photoURL] : [];
 
   return (
-    <div className="min-h-screen pb-24 md:pb-0 md:pt-16 relative overflow-hidden" style={{ background: appPageBg }}>
+    <div className="min-h-screen pb-24 md:pb-0 md:pt-20 relative overflow-hidden" style={{ background: appPageBg }}>
       <AppStarfield />
       <Navbar />
       <div className="max-w-lg mx-auto px-4 pt-8 relative z-10">
