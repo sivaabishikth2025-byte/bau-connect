@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef } from "react";
 import Link from "next/link";
+import BauLogo from "@/components/BauLogo";
 
 // Particles rendered only on client to avoid hydration mismatch from Math.random()
 function ClientParticles() {
@@ -222,7 +223,7 @@ export default function Landing() {
         <nav style={{position:"fixed",top:0,left:0,right:0,zIndex:100,display:"flex",alignItems:"center",justifyContent:"space-between",padding:"24px 56px"}}>
           <div style={{position:"absolute",inset:0,background:"linear-gradient(to bottom,rgba(28,45,90,.92),transparent)",pointerEvents:"none"}}/>
           <div style={{display:"flex",alignItems:"center",gap:12,position:"relative",zIndex:1}}>
-            <img src="/bau-logo.png" alt="BAU" style={{ height: 52, width: "auto", objectFit: "contain" }} />
+            <BauLogo size="landing" />
           </div>
           <ul style={{display:"flex",gap:40,listStyle:"none",position:"relative",zIndex:1}}>
             <li><a href="#discover" className="nl">Explore</a></li>
@@ -461,7 +462,7 @@ export default function Landing() {
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:64,paddingBottom:48,borderBottom:"1px solid rgba(187,211,238,.1)",flexWrap:"wrap",gap:40}}>
             <div>
               <div style={{display:"flex",alignItems:"center",gap:12}}>
-                <img src="/bau-logo.png" alt="BAU" style={{ height: 44, width: "auto", objectFit: "contain" }} />
+                <BauLogo size="footer" />
               </div>
               <p className="serif" style={{fontSize:16,fontStyle:"italic",color:"var(--ice)",opacity:.5,marginTop:8}}>Exclusively for Bay Atlantic University</p>
             </div>

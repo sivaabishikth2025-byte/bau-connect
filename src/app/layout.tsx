@@ -5,7 +5,11 @@ import NotificationsProvider from "@/components/NotificationsProvider";
 
 export const metadata: Metadata = {
   title: "BAU Connect | Campus life, together",
-  description: "Connect with Bay Atlantic University classmates for carpools, study groups, hangouts, and exploring DC"
+  description: "Connect with Bay Atlantic University classmates for carpools, study groups, hangouts, and exploring DC",
+  icons: {
+    icon: [{ url: "/favicon.png", type: "image/png" }],
+    apple: [{ url: "/apple-icon.png", type: "image/png" }],
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

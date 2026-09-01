@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { signInWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import Link from "next/link";
+import BauLogo from "@/components/BauLogo";
 
 export default function Login() {
   const router = useRouter();
@@ -67,9 +68,7 @@ export default function Login() {
 
         {/* Logo */}
         <div className="flex justify-center mb-6">
-          <div className="bg-white rounded-2xl shadow p-3">
-            <img src="/bau-logo.png" alt="BAU Logo" className="h-16 w-auto object-contain" />
-          </div>
+          <BauLogo size="auth" className="shadow-md" />
         </div>
 
         {/* Title */}

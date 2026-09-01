@@ -7,6 +7,7 @@ import { collection, onSnapshot, query, where } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
 import { Users, CalendarDays, Map, UserPlus, User, LogOut, HandHeart, Menu, X, Bell, Shield } from "lucide-react";
+import BauLogo from "@/components/BauLogo";
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -63,7 +64,7 @@ export default function Navbar() {
       <div className="max-w-screen-xl mx-auto flex items-center justify-around md:justify-between px-1 md:px-6 py-2 md:py-3">
         <div className="hidden md:flex items-center gap-2">
           <Link href="/landing" className="flex items-center gap-2">
-            <img src="/bau-logo.png" alt="BAU Connect" style={{ height: 44, width: "auto", objectFit: "contain" }} className="cursor-pointer hover:opacity-80 transition" />
+            <BauLogo size="nav" alt="BAU Connect" className="cursor-pointer hover:opacity-90 transition" />
             <span className="font-black text-primary text-sm tracking-tight">BAU Connect</span>
           </Link>
         </div>
