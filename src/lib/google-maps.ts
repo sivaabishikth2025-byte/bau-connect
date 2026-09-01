@@ -2,7 +2,13 @@ import { BAU_CAMPUS } from "@/lib/constants";
 
 /** Google Maps embed — locations resolved by Google, not hand-entered coordinates. */
 export function googleMapsEmbedUrl(query: string, zoom = 16) {
-  return `https://www.google.com/maps?q=${encodeURIComponent(query)}&z=${zoom}&output=embed`;
+  const params = new URLSearchParams({
+    q: query,
+    z: String(zoom),
+    output: "embed",
+    hl: "en",
+  });
+  return `https://www.google.com/maps?${params.toString()}`;
 }
 
 export function googleMapsSearchUrl(query: string) {
@@ -26,7 +32,7 @@ export function googleMapsDirectionsUrl(
 }
 
 export function transitMapQuery(stationName: string) {
-  return `${stationName} WMATA Metro Station, Washington, DC`;
+  return `${stationName} Station, Washington, DC`;
 }
 
 export function landmarkMapQuery(placeName: string) {

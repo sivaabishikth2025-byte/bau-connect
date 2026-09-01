@@ -1,14 +1,13 @@
 "use client";
 import { useEffect, useMemo, useRef, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import dynamic from "next/dynamic";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import Navbar from "@/components/Navbar";
 import GoogleMapEmbed from "@/components/GoogleMapEmbed";
 import { AppStarfield, appPageBg } from "@/components/AppShell";
 import {
-  BAU_CAMPUS, CAMPUS_LOCATIONS, DC_SPOTS, TRANSIT_SPOTS, EXPLORE_DC,
+  BAU_CAMPUS, CAMPUS_LOCATIONS, TRANSIT_SPOTS, EXPLORE_DC,
   volunteerCategoryMeta
 } from "@/lib/constants";
 import {
@@ -18,20 +17,12 @@ import {
   landmarkMapQuery,
   transitMapQuery,
 } from "@/lib/google-maps";
-import { LAYER_COLORS, type MapPin } from "@/lib/basemaps";
 import { VolunteerJob } from "@/types";
 import {
   ExternalLink, Navigation, Train,
   HandHeart, Users, LocateFixed, Building2, Landmark
 } from "lucide-react";
 import Link from "next/link";
-
-const CampusMap = dynamic(() => import("@/components/CampusMap"), {
-  ssr: false,
-  loading: () => (
-    <div className="rounded-3xl bg-white/10 border border-white/10 animate-pulse" style={{ height: "min(72vh, 680px)" }} />
-  ),
-});
 
 type SpotKind = "campus" | "transit" | "area";
 
@@ -44,30 +35,6 @@ function MapContent() {
   const [selectedId, setSelectedId] = useState<string>("bau-campus");
   const [floorFilter, setFloorFilter] = useState<string>("all");
   const [volunteerJobs, setVolunteerJobs] = useState<(VolunteerJob & { id: string })[]>([]);
-
-  const pins: MapPin[] = useMemo(() => {
-    const campus: MapPin = {
-      id: "bau-campus",
-      title: BAU_CAMPUS.name,
-      subtitle: BAU_CAMPUS.address,
-      lat: BAU_CAMPUS.lat,
-      lng: BAU_CAMPUS.lng,
-      layer: "campus",
-      color: LAYER_COLORS.campus,
-      meta: "Tap a pin or pick from the lists below",
-    };
-    const around = DC_SPOTS.map(s => ({
-      id: s.id,
-      title: s.name,
-      subtitle: s.note,
-      lat: s.lat,
-      lng: s.lng,
-      layer: (s.kind === "transit" ? "transit" : "area") as "transit" | "area",
-      color: s.kind === "transit" ? LAYER_COLORS.transit : LAYER_COLORS.area,
-      meta: s.note,
-    }));
-    return [campus, ...around];
-  }, []);
 
   const selectSpot = (id: string) => {
     setSelectedId(id);
@@ -110,7 +77,6 @@ function MapContent() {
   );
 
   const highlightedRoom = CAMPUS_LOCATIONS.find(c => c.id === spotParam);
-  const selectedPin = pins.find(p => p.id === selectedId) ?? pins[0];
   const selectedTransit = TRANSIT_SPOTS.find(s => s.id === selectedId);
   const selectedLandmark = EXPLORE_DC.find(s => s.id === selectedId);
 
@@ -119,6 +85,11 @@ function MapContent() {
     : selectedTransit
       ? "transit"
       : "area";
+
+  const selectedTitle =
+    spotKind === "campus"
+      ? BAU_CAMPUS.name
+      : selectedTransit?.name ?? selectedLandmark?.name ?? BAU_CAMPUS.name;
 
   const mapQuery = useMemo(() => {
     if (spotKind === "campus") return campusMapQuery();
@@ -129,13 +100,8 @@ function MapContent() {
 
   const directionsUrl = useMemo(() => {
     if (spotKind === "campus") return googleMapsDirectionsUrl(BAU_CAMPUS.address);
-    const dest = selectedTransit
-      ? transitMapQuery(selectedTransit.name)
-      : selectedLandmark
-        ? landmarkMapQuery(selectedLandmark.name)
-        : BAU_CAMPUS.address;
-    return googleMapsDirectionsUrl(dest, BAU_CAMPUS.address, "walking");
-  }, [spotKind, selectedTransit, selectedLandmark]);
+    return googleMapsDirectionsUrl(mapQuery, BAU_CAMPUS.address, "walking");
+  }, [spotKind, mapQuery]);
 
   const openInGoogleUrl = googleMapsSearchUrl(mapQuery);
 
@@ -145,7 +111,7 @@ function MapContent() {
         <div>
           <h1 className="text-3xl font-black text-white">BAU Connect Map</h1>
           <p className="text-white/50 text-sm mt-1">
-            Tap any pin on the map or pick a station / landmark — the panel updates instantly.
+            Google Maps — pick any location below and it shows on the map and in the side panel.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -204,22 +170,23 @@ function MapContent() {
           {spotKind === "campus" && <span className="w-2 h-2 rounded-full bg-sky" />}
           {spotKind === "transit" && <Train size={12} className="text-secondary" />}
           {spotKind === "area" && <Landmark size={12} className="text-accent" />}
-          {selectedPin.title}
+          {selectedTitle}
         </span>
         <button
+          type="button"
           onClick={() => selectSpot("bau-campus")}
           className="ml-auto inline-flex items-center gap-1 px-3 py-2 rounded-full text-[11px] font-bold bg-white/10 text-white/80"
         >
-          <LocateFixed size={12} /> Recenter campus
+          <LocateFixed size={12} /> Back to campus
         </button>
       </div>
 
       <div className="grid lg:grid-cols-[1.6fr_1fr] gap-4 mb-6">
-        <CampusMap
-          pins={pins}
-          activeLayers={["campus", "transit", "area"]}
-          selectedId={selectedId}
-          onSelect={pin => selectSpot(pin.id)}
+        <GoogleMapEmbed
+          key={selectedId}
+          query={mapQuery}
+          zoom={spotKind === "campus" ? 17 : 16}
+          title={selectedTitle}
         />
 
         <div
@@ -265,16 +232,9 @@ function MapContent() {
             </>
           )}
 
-          <div className="mb-4 rounded-2xl overflow-hidden border border-gray-100">
-            <GoogleMapEmbed
-              key={mapQuery}
-              query={mapQuery}
-              zoom={spotKind === "campus" ? 17 : 16}
-              title={selectedPin.title}
-              height="180px"
-              className="rounded-2xl shadow-none border-0"
-            />
-          </div>
+          <p className="text-xs text-gray-400 mb-4 mt-auto">
+            Showing <strong className="text-gray-600">{selectedTitle}</strong> on Google Maps.
+          </p>
 
           <a
             href={spotKind === "campus"
@@ -282,7 +242,7 @@ function MapContent() {
               : googleMapsDirectionsUrl(mapQuery, BAU_CAMPUS.address, "walking")}
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-auto text-center bg-primary text-white font-bold text-sm py-2.5 rounded-2xl"
+            className="text-center bg-primary text-white font-bold text-sm py-2.5 rounded-2xl"
           >
             {spotKind === "campus" ? "Get directions to campus" : "Walk from campus"}
           </a>
@@ -294,7 +254,7 @@ function MapContent() {
           <h2 className="font-black text-primary text-lg mb-1 flex items-center gap-2">
             <Train size={18} className="text-secondary" /> All Metro stations
           </h2>
-          <p className="text-gray-500 text-sm mb-3">Tap a station — map and panel update together</p>
+          <p className="text-gray-500 text-sm mb-3">Tap a station — Google Maps and the panel update</p>
           <ul className="space-y-1.5 max-h-72 overflow-y-auto pr-1">
             {TRANSIT_SPOTS.map(s => (
               <li key={s.id}>
