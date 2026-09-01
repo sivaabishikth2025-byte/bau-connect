@@ -14,11 +14,12 @@ function escapeHtml(s: string) {
 function pinIcon(pin: MapPin, selected = false) {
   const letter = pin.layer === "campus" ? "B" : pin.layer === "transit" ? "M" : "★";
   const size = pin.layer === "campus" ? (selected ? 46 : 40) : selected ? 34 : 26;
+  const tipY = size + 8;
   return L.divIcon({
     className: "bau-pin",
-    iconSize: [size, size + 10],
-    iconAnchor: [size / 2, size + 6],
-    popupAnchor: [0, -size],
+    iconSize: [size, tipY],
+    iconAnchor: [size / 2, tipY],
+    popupAnchor: [0, -tipY],
     html: `<div class="bau-pin-wrap ${pin.layer} ${selected ? "is-selected" : ""}" style="--pin:${pin.color};--sz:${size}px">
       <div class="bau-pin-bubble">${letter}</div>
       <div class="bau-pin-point"></div>
