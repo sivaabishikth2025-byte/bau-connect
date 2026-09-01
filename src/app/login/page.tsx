@@ -68,7 +68,7 @@ export default function Login() {
 
         {/* Logo */}
         <div className="flex justify-center mb-6">
-          <BauLogo size="auth" className="shadow-md" />
+          <BauLogo size="auth" />
         </div>
 
         {/* Title */}

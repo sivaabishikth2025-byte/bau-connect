@@ -1,10 +1,10 @@
 type BauLogoSize = "nav" | "auth" | "landing" | "footer";
 
 const SIZES: Record<BauLogoSize, { height: number; maxWidth: number }> = {
-  nav: { height: 42, maxWidth: 190 },
-  auth: { height: 72, maxWidth: 280 },
-  landing: { height: 56, maxWidth: 220 },
-  footer: { height: 48, maxWidth: 200 },
+  nav: { height: 56, maxWidth: 320 },
+  auth: { height: 104, maxWidth: 420 },
+  landing: { height: 80, maxWidth: 380 },
+  footer: { height: 68, maxWidth: 340 },
 };
 
 interface BauLogoProps {
@@ -23,7 +23,7 @@ export default function BauLogo({
     <img
       src="/bau-logo.png"
       alt={alt}
-      className={`object-contain rounded-lg ${className}`}
+      className={`object-contain ${className}`}
       style={{ height, maxWidth, width: "auto" }}
     />
   );

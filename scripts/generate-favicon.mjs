@@ -18,11 +18,11 @@ const outPublic = resolve(root, "public", "favicon.png");
 
 const pipeline = sharp(source).trim({ threshold: 12 }).resize(512, 512, {
   fit: "contain",
-  background: { r: 28, g: 45, b: 90, alpha: 1 },
+  background: { r: 0, g: 0, b: 0, alpha: 0 },
 });
 
 await pipeline.clone().png().toFile(outIcon);
-await pipeline.clone().resize(180, 180, { fit: "contain", background: { r: 28, g: 45, b: 90, alpha: 1 } }).png().toFile(outApple);
-await pipeline.clone().resize(32, 32, { fit: "contain", background: { r: 28, g: 45, b: 90, alpha: 1 } }).png().toFile(outPublic);
+await pipeline.clone().resize(180, 180, { fit: "contain", background: { r: 0, g: 0, b: 0, alpha: 0 } }).png().toFile(outApple);
+await pipeline.clone().resize(32, 32, { fit: "contain", background: { r: 0, g: 0, b: 0, alpha: 0 } }).png().toFile(outPublic);
 
 console.log("Wrote:", outIcon, outApple, outPublic);
