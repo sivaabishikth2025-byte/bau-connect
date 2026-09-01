@@ -183,7 +183,7 @@ function MapContent() {
 
       <div className="grid lg:grid-cols-[1.6fr_1fr] gap-4 mb-6">
         <GoogleMapEmbed
-          key={selectedId}
+          key={`map-${selectedId}`}
           query={mapQuery}
           zoom={spotKind === "campus" ? 17 : 16}
           title={selectedTitle}
@@ -191,7 +191,7 @@ function MapContent() {
 
         <div
           ref={detailRef}
-          key={selectedId}
+          key={`detail-${selectedId}`}
           className="bg-white rounded-3xl shadow-lg p-5 flex flex-col min-h-[280px]"
         >
           {spotKind === "campus" && (
