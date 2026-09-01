@@ -1,23 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { SESv2Client, SendEmailCommand } from "@aws-sdk/client-sesv2";
-
-function parseFrom(raw: string) {
-  const match = raw.match(/^(.*)<([^>]+)>$/);
-  if (match) {
-    return {
-      name: match[1].trim().replace(/^"|"$/g, "") || "BAU Connect",
-      email: match[2].trim(),
-    };
-  }
-  return { name: "BAU Connect", email: raw.trim() };
-}
+import { sendSesEmail, getSesConfig } from "@/lib/ses";
 
 export async function POST(req: NextRequest) {
-  // Do not use AWS_REGION. Netlify reserves it and it will not match SES us-east-1.
-  const region = process.env.SES_REGION || "us-east-1";
-  const fromRaw = process.env.SES_FROM_EMAIL || process.env.AWS_SES_FROM_EMAIL;
-  const accessKeyId = process.env.SES_ACCESS_KEY_ID || process.env.AWS_ACCESS_KEY_ID;
-  const secretAccessKey = process.env.SES_SECRET_ACCESS_KEY || process.env.AWS_SECRET_ACCESS_KEY;
+  const { fromRaw, accessKeyId, secretAccessKey } = getSesConfig();
 
   if (!fromRaw) {
     return NextResponse.json({ error: "SES_FROM_EMAIL is not set" }, { status: 500 });
@@ -89,7 +74,6 @@ export async function POST(req: NextRequest) {
     ? (String(url).startsWith("http") ? url : `${origin}${url}`)
     : origin;
 
-  const from = parseFrom(fromRaw);
   const html = `
     <div style="font-family:Nunito,sans-serif;max-width:480px;margin:0 auto;padding:32px;background:#f4f7ff;border-radius:16px;">
       <h2 style="color:#1C2D5A;margin-bottom:12px;">${subject}</h2>
@@ -102,32 +86,16 @@ export async function POST(req: NextRequest) {
   `;
 
   try {
-    const client = new SESv2Client({
-      region,
-      credentials: { accessKeyId, secretAccessKey },
-    });
     const results = [];
 
     for (const email of recipients) {
-      const result = await client.send(
-        new SendEmailCommand({
-          FromEmailAddress: `${from.name} <${from.email}>`,
-          Destination: { ToAddresses: [email] },
-          Content: {
-            Simple: {
-              Subject: { Data: subject, Charset: "UTF-8" },
-              Body: {
-                Html: { Data: html, Charset: "UTF-8" },
-                Text: {
-                  Data: `${subject}\n\n${String(body || "").replace(/<[^>]+>/g, "")}\n\nOpen BAU Connect: ${href}`,
-                  Charset: "UTF-8",
-                },
-              },
-            },
-          },
-        })
-      );
-      results.push({ email, messageId: result.MessageId });
+      const messageId = await sendSesEmail({
+        to: email,
+        subject,
+        html,
+        text: `${subject}\n\n${String(body || "").replace(/<[^>]+>/g, "")}\n\nOpen BAU Connect: ${href}`,
+      });
+      results.push({ email, messageId });
     }
 
     return NextResponse.json({ ok: true, results });

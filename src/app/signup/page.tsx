@@ -1,8 +1,9 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { createUserWithEmailAndPassword, sendEmailVerification } from "firebase/auth";
+import { createUserWithEmailAndPassword } from "firebase/auth";
 import { auth } from "@/lib/firebase";
+import { sendVerificationEmail } from "@/lib/verificationEmail";
 import Link from "next/link";
 import BauLogo from "@/components/BauLogo";
 
@@ -25,8 +26,8 @@ export default function Signup() {
     if (password !== confirm) return setError("Passwords don't match.");
     setLoading(true);
     try {
-      const cred = await createUserWithEmailAndPassword(auth, email, password);
-      await sendEmailVerification(cred.user);
+      await createUserWithEmailAndPassword(auth, email, password);
+      await sendVerificationEmail();
       router.replace("/verify-email");
     } catch (e: any) {
       setError(e.message);

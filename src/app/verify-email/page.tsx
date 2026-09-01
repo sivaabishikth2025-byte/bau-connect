@@ -1,28 +1,42 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { sendEmailVerification, reload, signOut } from "firebase/auth";
+import { reload, signOut } from "firebase/auth";
 import { auth } from "@/lib/firebase";
+import { sendVerificationEmail } from "@/lib/verificationEmail";
 
 export default function VerifyEmail() {
   const router = useRouter();
   const [checking, setChecking] = useState(false);
+  const [resending, setResending] = useState(false);
   const [msg, setMsg] = useState("");
+  const [error, setError] = useState("");
 
   const checkVerification = async () => {
     setChecking(true);
+    setError("");
     await reload(auth.currentUser!);
     if (auth.currentUser?.emailVerified) {
       router.replace("/");
     } else {
-      setMsg("Not verified yet. Check your inbox and click the link.");
+      setMsg("");
+      setError("Not verified yet. Check your inbox and spam folder, then try again.");
     }
     setChecking(false);
   };
 
   const resend = async () => {
-    await sendEmailVerification(auth.currentUser!);
-    setMsg("Verification email resent!");
+    setResending(true);
+    setError("");
+    setMsg("");
+    try {
+      await sendVerificationEmail();
+      setMsg("Verification email sent from baustudentconnect.com. Check inbox and spam.");
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Could not resend email. Wait a minute and try again.");
+    } finally {
+      setResending(false);
+    }
   };
 
   return (
@@ -34,10 +48,15 @@ export default function VerifyEmail() {
           We sent a link to{" "}
           <span className="font-semibold text-primary">{auth.currentUser?.email}</span>
         </p>
-        <p className="text-gray-400 text-sm mb-2">Click the link in your email to continue.</p>
-        <p className="text-amber-500 text-sm mb-8">⚠️ Check your spam/junk folder if you don't see it in your inbox.</p>
+        <p className="text-gray-400 text-sm mb-2">
+          The email comes from <strong className="text-gray-600">baustudentconnect.com</strong> — not Gmail or Firebase.
+        </p>
+        <p className="text-amber-600 text-sm mb-6">
+          Check spam/junk and search for &quot;BAU Connect&quot;. University filters sometimes delay delivery by a few minutes.
+        </p>
 
-        {msg && <p className="text-sm text-primary mb-4">{msg}</p>}
+        {msg && <p className="text-sm text-green-600 mb-4">{msg}</p>}
+        {error && <p className="text-sm text-red-500 mb-4">{error}</p>}
 
         <button
           onClick={checkVerification}
@@ -48,9 +67,10 @@ export default function VerifyEmail() {
         </button>
         <button
           onClick={resend}
-          className="w-full text-primary font-semibold py-2 hover:underline"
+          disabled={resending}
+          className="w-full text-primary font-semibold py-2 hover:underline disabled:opacity-60"
         >
-          Resend email
+          {resending ? "Sending..." : "Resend email"}
         </button>
         <button
           onClick={() => signOut(auth).then(() => router.replace("/login"))}
