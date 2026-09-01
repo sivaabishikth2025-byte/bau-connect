@@ -189,11 +189,7 @@ function MapContent() {
       </div>
 
       <div className="grid lg:grid-cols-[1.6fr_1fr] gap-4 mb-6">
-        <InteractiveGoogleMap
-          selectedId={selectedId}
-          mapQuery={mapQuery}
-          onSelect={selectSpot}
-        />
+        <InteractiveGoogleMap selectedId={selectedId} onSelect={selectSpot} />
 
         <div
           ref={detailRef}

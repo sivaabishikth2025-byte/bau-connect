@@ -2,7 +2,12 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { GoogleMap, useJsApiLoader } from "@react-google-maps/api";
-import { findSpotIdByPlaceName, MAP_CENTER } from "@/lib/map-spots";
+import {
+  findSpotIdByPlaceName,
+  getMapSpot,
+  MAP_CENTER,
+  nearestMapSpotId,
+} from "@/lib/map-spots";
 
 const MAP_HEIGHT = "min(72vh, 720px)";
 const LIBRARIES: ("places")[] = ["places"];
@@ -10,30 +15,16 @@ const LOADER_ID = "bau-google-maps";
 
 interface InteractiveGoogleMapProps {
   selectedId: string;
-  mapQuery: string;
   onSelect: (id: string) => void;
 }
 
-function matchSpotFromGeocoderResults(
-  results: google.maps.GeocoderResult[] | null
-): string | null {
-  if (!results?.length) return null;
-  for (const r of results) {
-    const id = findSpotIdByPlaceName(r.formatted_address);
-    if (id) return id;
-    for (const t of r.address_components || []) {
-      const fromType = findSpotIdByPlaceName(t.long_name);
-      if (fromType) return fromType;
-    }
-  }
-  return findSpotIdByPlaceName(results[0].formatted_address);
+function maxKmForZoom(zoom: number) {
+  if (zoom >= 16) return 0.45;
+  if (zoom >= 14) return 0.9;
+  return 2;
 }
 
-export default function InteractiveGoogleMap({
-  selectedId,
-  mapQuery,
-  onSelect,
-}: InteractiveGoogleMapProps) {
+export default function InteractiveGoogleMap({ selectedId, onSelect }: InteractiveGoogleMapProps) {
   const apiKey =
     process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ||
     process.env.NEXT_PUBLIC_FIREBASE_API_KEY ||
@@ -46,30 +37,43 @@ export default function InteractiveGoogleMap({
   });
 
   const [map, setMap] = useState<google.maps.Map | null>(null);
-  const geocoderRef = useRef<google.maps.Geocoder | null>(null);
+  const [zoom, setZoom] = useState(17);
   const placesRef = useRef<google.maps.places.PlacesService | null>(null);
+
+  const selectedSpot = useMemo(() => getMapSpot(selectedId), [selectedId]);
 
   const onMapLoad = useCallback((m: google.maps.Map) => {
     setMap(m);
-    geocoderRef.current = new google.maps.Geocoder();
+    setZoom(m.getZoom() ?? 17);
     placesRef.current = new google.maps.places.PlacesService(m);
   }, []);
 
-  // List / sidebar selection → pan Google Maps to that place (Google resolves location).
-  useEffect(() => {
-    if (!map || !geocoderRef.current || !mapQuery) return;
+  const onZoomChanged = useCallback(() => {
+    if (map) setZoom(map.getZoom() ?? 17);
+  }, [map]);
 
-    geocoderRef.current.geocode({ address: mapQuery }, (results, status) => {
-      if (status !== google.maps.GeocoderStatus.OK || !results?.[0]?.geometry?.location) return;
-      map.panTo(results[0].geometry.location);
-      map.setZoom(selectedId === "bau-campus" ? 17 : 16);
-    });
-  }, [map, mapQuery, selectedId]);
+  // List / sidebar selection → pan map (Google displays the place; we don't draw pins).
+  useEffect(() => {
+    if (!map || !selectedSpot) return;
+    map.panTo({ lat: selectedSpot.lat, lng: selectedSpot.lng });
+    map.setZoom(selectedId === "bau-campus" ? 17 : 16);
+  }, [map, selectedSpot, selectedId]);
+
+  const pickAt = useCallback(
+    (lat: number, lng: number) => {
+      const id = nearestMapSpotId(lat, lng, maxKmForZoom(zoom));
+      if (id) onSelect(id);
+    },
+    [onSelect, zoom]
+  );
 
   const onMapClick = useCallback(
     (e: google.maps.MapMouseEvent & { placeId?: string; stop?: () => void }) => {
       const latLng = e.latLng;
       if (!latLng) return;
+
+      const lat = latLng.lat();
+      const lng = latLng.lng();
 
       if (e.placeId && placesRef.current) {
         e.stop?.();
@@ -84,24 +88,15 @@ export default function InteractiveGoogleMap({
                 return;
               }
             }
-            geocoderRef.current?.geocode({ location: latLng }, (results, gStatus) => {
-              if (gStatus === google.maps.GeocoderStatus.OK) {
-                const id = matchSpotFromGeocoderResults(results);
-                if (id) onSelect(id);
-              }
-            });
+            pickAt(lat, lng);
           }
         );
         return;
       }
 
-      geocoderRef.current?.geocode({ location: latLng }, (results, status) => {
-        if (status !== google.maps.GeocoderStatus.OK) return;
-        const id = matchSpotFromGeocoderResults(results);
-        if (id) onSelect(id);
-      });
+      pickAt(lat, lng);
     },
-    [onSelect]
+    [onSelect, pickAt]
   );
 
   const mapOptions = useMemo<google.maps.MapOptions>(
@@ -159,6 +154,7 @@ export default function InteractiveGoogleMap({
         center={MAP_CENTER}
         zoom={17}
         onLoad={onMapLoad}
+        onZoomChanged={onZoomChanged}
         onClick={onMapClick}
         options={mapOptions}
       />

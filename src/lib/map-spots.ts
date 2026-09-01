@@ -78,6 +78,28 @@ export function getMapSpot(id: string): MapSpot | undefined {
   return MAP_SPOTS.find(s => s.id === id);
 }
 
+function distKm(lat1: number, lng1: number, lat2: number, lng2: number) {
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLng = ((lng2 - lng1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+/** Match a map tap to the nearest catalog spot (no visible pin — lookup only). */
+export function nearestMapSpotId(lat: number, lng: number, maxKm: number): string | null {
+  let best: { id: string; d: number } | null = null;
+  for (const spot of MAP_SPOTS) {
+    const d = distKm(lat, lng, spot.lat, spot.lng);
+    if (d <= maxKm && (!best || d < best.d)) best = { id: spot.id, d };
+  }
+  return best?.id ?? null;
+}
+
 export const MAP_CENTER = { lat: BAU_CAMPUS.lat, lng: BAU_CAMPUS.lng };
 
 export const LAYER_MARKER_COLORS: Record<MapSpotLayer, string> = {
