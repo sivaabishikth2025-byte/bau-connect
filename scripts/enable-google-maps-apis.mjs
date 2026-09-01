@@ -2,38 +2,9 @@
  * Enable Maps + Places APIs using Firebase CLI user credentials.
  * Run: node scripts/enable-google-maps-apis.mjs
  */
-import { readFileSync } from "node:fs";
-import { homedir } from "node:os";
-import { resolve } from "node:path";
+import { getFirebaseCliAccessToken } from "./firebase-cli-auth.mjs";
 
 const projectId = "baudate-8fdb8";
-const configPath = resolve(homedir(), ".config", "configstore", "firebase-tools.json");
-
-const config = JSON.parse(readFileSync(configPath, "utf8"));
-const tokens = config.tokens;
-if (!tokens?.refresh_token) {
-  console.error("Run: npx firebase-tools@latest login");
-  process.exit(1);
-}
-
-async function getUserAccessToken() {
-  if (tokens.access_token && tokens.expires_at > Date.now()) {
-    return tokens.access_token;
-  }
-  const res = await fetch("https://oauth2.googleapis.com/token", {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({
-      client_id: "563584335869-fgrhgmd47bqnekij5i8b5pr03ho849e6.apps.googleusercontent.com",
-      client_secret: "j9pD0sN4pBorFn2k1KjgXDaS",
-      refresh_token: tokens.refresh_token,
-      grant_type: "refresh_token",
-    }),
-  });
-  const data = await res.json();
-  if (!data.access_token) throw new Error(data.error_description || "Token refresh failed");
-  return data.access_token;
-}
 
 async function enableApi(service, token) {
   const url = `https://serviceusage.googleapis.com/v1/projects/${projectId}/services/${service}:enable`;
@@ -55,7 +26,7 @@ async function enableApi(service, token) {
   return false;
 }
 
-const token = await getUserAccessToken();
+const token = await getFirebaseCliAccessToken();
 const services = [
   "maps-backend.googleapis.com",
   "places-backend.googleapis.com",

@@ -3,15 +3,13 @@
  * Run: node scripts/fix-maps-api-key.mjs
  */
 import { readFileSync } from "node:fs";
-import { homedir } from "node:os";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { getFirebaseCliAccessToken } from "./firebase-cli-auth.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const projectId = "baudate-8fdb8";
 const projectNumber = "831204733200";
-const configPath = resolve(homedir(), ".config", "configstore", "firebase-tools.json");
-
 const env = Object.fromEntries(
   readFileSync(resolve(__dirname, "..", ".env.local"), "utf8")
     .split(/\r?\n/)
@@ -22,28 +20,6 @@ const env = Object.fromEntries(
     })
 );
 const targetKey = env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || env.NEXT_PUBLIC_FIREBASE_API_KEY;
-
-const config = JSON.parse(readFileSync(configPath, "utf8"));
-const tokens = config.tokens;
-
-async function getUserAccessToken() {
-  if (tokens.access_token && tokens.expires_at > Date.now()) {
-    return tokens.access_token;
-  }
-  const res = await fetch("https://oauth2.googleapis.com/token", {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({
-      client_id: "563584335869-fgrhgmd47bqnekij5i8b5pr03ho849e6.apps.googleusercontent.com",
-      client_secret: "j9pD0sN4pBorFn2k1KjgXDaS",
-      refresh_token: tokens.refresh_token,
-      grant_type: "refresh_token",
-    }),
-  });
-  const data = await res.json();
-  if (!data.access_token) throw new Error(data.error_description || "Token refresh failed");
-  return data.access_token;
-}
 
 const MAP_SERVICES = [
   "maps-backend.googleapis.com",
@@ -107,7 +83,7 @@ function mergeReferrers(existing = []) {
   return [...set];
 }
 
-const token = await getUserAccessToken();
+const token = await getFirebaseCliAccessToken();
 
 // Enable API Keys API if needed
 await fetch(`https://serviceusage.googleapis.com/v1/projects/${projectId}/services/apikeys.googleapis.com:enable`, {
