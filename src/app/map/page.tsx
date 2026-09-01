@@ -8,9 +8,8 @@ import dynamic from "next/dynamic";
 import { AppStarfield, appPageBg } from "@/components/AppShell";
 import {
   BAU_CAMPUS, CAMPUS_LOCATIONS, TRANSIT_SPOTS, EXPLORE_DC,
-  MAP_LAYERS, volunteerCategoryMeta
+  volunteerCategoryMeta
 } from "@/lib/constants";
-import type { MapSpotLayer } from "@/lib/map-spots";
 import {
   campusMapQuery,
   googleMapsDirectionsUrl,
@@ -42,7 +41,6 @@ function MapContent() {
 
   const [selectedId, setSelectedId] = useState<string>("bau-campus");
   const [floorFilter, setFloorFilter] = useState<string>("all");
-  const [visibleLayers, setVisibleLayers] = useState<MapSpotLayer[]>(["campus", "transit", "area"]);
   const [volunteerJobs, setVolunteerJobs] = useState<(VolunteerJob & { id: string })[]>([]);
 
   const selectSpot = useCallback((id: string) => {
@@ -51,12 +49,6 @@ function MapContent() {
       detailRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
     });
   }, []);
-
-  const toggleLayer = (layer: MapSpotLayer) => {
-    setVisibleLayers(prev =>
-      prev.includes(layer) ? prev.filter(l => l !== layer) : [...prev, layer]
-    );
-  };
 
   useEffect(() => {
     if (spotParam) {
@@ -126,7 +118,7 @@ function MapContent() {
         <div>
           <h1 className="text-3xl font-black text-white">BAU Connect Map</h1>
           <p className="text-white/50 text-sm mt-1">
-            Google Maps — tap a pin, tap near a location, or pick from the lists. The side panel updates instantly.
+            Google Maps — click any place on the map or pick from the lists. The side panel updates instantly.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -196,32 +188,11 @@ function MapContent() {
         </button>
       </div>
 
-      <div className="flex flex-wrap gap-2 mb-3">
-        {MAP_LAYERS.map(layer => {
-          const on = visibleLayers.includes(layer.id);
-          return (
-            <button
-              key={layer.id}
-              type="button"
-              onClick={() => toggleLayer(layer.id)}
-              className={`inline-flex items-center gap-2 px-3 py-2 rounded-full text-xs font-bold border transition ${
-                on
-                  ? "bg-white text-primary border-white"
-                  : "bg-white/10 text-white/70 border-white/20"
-              }`}
-            >
-              <span className="w-2.5 h-2.5 rounded-full" style={{ background: layer.color }} />
-              {layer.label}
-            </button>
-          );
-        })}
-      </div>
-
       <div className="grid lg:grid-cols-[1.6fr_1fr] gap-4 mb-6">
         <InteractiveGoogleMap
           selectedId={selectedId}
+          mapQuery={mapQuery}
           onSelect={selectSpot}
-          visibleLayers={visibleLayers}
         />
 
         <div

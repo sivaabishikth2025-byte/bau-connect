@@ -38,16 +38,37 @@ export const MAP_SPOTS: MapSpot[] = [
   })),
 ];
 
+function normalizePlaceName(name: string) {
+  return name
+    .toLowerCase()
+    .replace(/\bwmata\b/g, "")
+    .replace(/\bmetro\s+station\b/g, "station")
+    .replace(/\s+station\b/g, "")
+    .replace(/[^a-z0-9\s]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 export function findSpotIdByPlaceName(name: string): string | null {
-  const n = name.toLowerCase();
-  if (n.includes("bay atlantic") || n.includes("bau")) return "bau-campus";
+  const n = normalizePlaceName(name);
+  if (
+    n.includes("bay atlantic") ||
+    n.includes("1510 h street") ||
+    (n.includes("bau") && n.includes("univers"))
+  ) {
+    return "bau-campus";
+  }
 
   for (const s of TRANSIT_SPOTS) {
-    const sn = s.name.toLowerCase();
+    const sn = normalizePlaceName(s.name);
+    if (!sn) continue;
     if (n.includes(sn) || sn.includes(n)) return s.id;
+    const first = sn.split(" ")[0];
+    if (first.length > 4 && n.includes(first)) return s.id;
   }
   for (const s of EXPLORE_DC) {
-    const sn = s.name.toLowerCase();
+    const sn = normalizePlaceName(s.name);
+    if (!sn) continue;
     if (n.includes(sn) || sn.includes(n)) return s.id;
   }
   return null;
