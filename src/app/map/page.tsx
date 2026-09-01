@@ -4,7 +4,7 @@ import { useSearchParams } from "next/navigation";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import Navbar from "@/components/Navbar";
-import GoogleMapEmbed from "@/components/GoogleMapEmbed";
+import dynamic from "next/dynamic";
 import { AppStarfield, appPageBg } from "@/components/AppShell";
 import {
   BAU_CAMPUS, CAMPUS_LOCATIONS, TRANSIT_SPOTS, EXPLORE_DC,
@@ -23,6 +23,13 @@ import {
   HandHeart, Users, LocateFixed, Building2, Landmark
 } from "lucide-react";
 import Link from "next/link";
+
+const InteractiveGoogleMap = dynamic(() => import("@/components/InteractiveGoogleMap"), {
+  ssr: false,
+  loading: () => (
+    <div className="rounded-[28px] border border-white/20 bg-white/10 animate-pulse" style={{ height: "min(72vh, 720px)" }} />
+  ),
+});
 
 type SpotKind = "campus" | "transit" | "area";
 
@@ -111,7 +118,7 @@ function MapContent() {
         <div>
           <h1 className="text-3xl font-black text-white">BAU Connect Map</h1>
           <p className="text-white/50 text-sm mt-1">
-            Google Maps — pick any location below and it shows on the map and in the side panel.
+            Google Maps — click any pin on the map or pick from the lists. The side panel updates instantly.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -182,12 +189,7 @@ function MapContent() {
       </div>
 
       <div className="grid lg:grid-cols-[1.6fr_1fr] gap-4 mb-6">
-        <GoogleMapEmbed
-          key={`map-${selectedId}`}
-          query={mapQuery}
-          zoom={spotKind === "campus" ? 17 : 16}
-          title={selectedTitle}
-        />
+        <InteractiveGoogleMap selectedId={selectedId} onSelect={selectSpot} />
 
         <div
           ref={detailRef}

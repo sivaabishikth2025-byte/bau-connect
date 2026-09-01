@@ -11,6 +11,7 @@
     "@aws-sdk/client-sesv2": "^3.1111.0",
     "@cloudinary/url-gen": "^1.22.0",
     "@netlify/plugin-nextjs": "^5.15.9",
+    "@react-google-maps/api": "^2.20.8",
     "clsx": "^2.1.1",
     "date-fns": "^3.6.0",
     "firebase": "^12.12.0",
