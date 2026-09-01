@@ -1,13 +1,14 @@
 "use client";
-import { useEffect, useMemo, useState, Suspense } from "react";
+import { useEffect, useMemo, useRef, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
+import dynamic from "next/dynamic";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import Navbar from "@/components/Navbar";
 import GoogleMapEmbed from "@/components/GoogleMapEmbed";
 import { AppStarfield, appPageBg } from "@/components/AppShell";
 import {
-  BAU_CAMPUS, CAMPUS_LOCATIONS, TRANSIT_SPOTS, EXPLORE_DC,
+  BAU_CAMPUS, CAMPUS_LOCATIONS, DC_SPOTS, TRANSIT_SPOTS, EXPLORE_DC,
   volunteerCategoryMeta
 } from "@/lib/constants";
 import {
@@ -17,6 +18,7 @@ import {
   landmarkMapQuery,
   transitMapQuery,
 } from "@/lib/google-maps";
+import { LAYER_COLORS, type MapPin } from "@/lib/basemaps";
 import { VolunteerJob } from "@/types";
 import {
   ExternalLink, Navigation, Train,
@@ -24,14 +26,55 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
+const CampusMap = dynamic(() => import("@/components/CampusMap"), {
+  ssr: false,
+  loading: () => (
+    <div className="rounded-3xl bg-white/10 border border-white/10 animate-pulse" style={{ height: "min(72vh, 680px)" }} />
+  ),
+});
+
+type SpotKind = "campus" | "transit" | "area";
+
 function MapContent() {
   const searchParams = useSearchParams();
   const spotParam = searchParams.get("spot");
   const interactiveUrl = process.env.NEXT_PUBLIC_BAU_INTERACTIVE_MAP_URL;
+  const detailRef = useRef<HTMLDivElement>(null);
 
   const [selectedId, setSelectedId] = useState<string>("bau-campus");
   const [floorFilter, setFloorFilter] = useState<string>("all");
   const [volunteerJobs, setVolunteerJobs] = useState<(VolunteerJob & { id: string })[]>([]);
+
+  const pins: MapPin[] = useMemo(() => {
+    const campus: MapPin = {
+      id: "bau-campus",
+      title: BAU_CAMPUS.name,
+      subtitle: BAU_CAMPUS.address,
+      lat: BAU_CAMPUS.lat,
+      lng: BAU_CAMPUS.lng,
+      layer: "campus",
+      color: LAYER_COLORS.campus,
+      meta: "Tap a pin or pick from the lists below",
+    };
+    const around = DC_SPOTS.map(s => ({
+      id: s.id,
+      title: s.name,
+      subtitle: s.note,
+      lat: s.lat,
+      lng: s.lng,
+      layer: (s.kind === "transit" ? "transit" : "area") as "transit" | "area",
+      color: s.kind === "transit" ? LAYER_COLORS.transit : LAYER_COLORS.area,
+      meta: s.note,
+    }));
+    return [campus, ...around];
+  }, []);
+
+  const selectSpot = (id: string) => {
+    setSelectedId(id);
+    requestAnimationFrame(() => {
+      detailRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    });
+  };
 
   useEffect(() => {
     if (spotParam) {
@@ -67,36 +110,32 @@ function MapContent() {
   );
 
   const highlightedRoom = CAMPUS_LOCATIONS.find(c => c.id === spotParam);
+  const selectedPin = pins.find(p => p.id === selectedId) ?? pins[0];
   const selectedTransit = TRANSIT_SPOTS.find(s => s.id === selectedId);
   const selectedLandmark = EXPLORE_DC.find(s => s.id === selectedId);
 
+  const spotKind: SpotKind = selectedId === "bau-campus"
+    ? "campus"
+    : selectedTransit
+      ? "transit"
+      : "area";
+
   const mapQuery = useMemo(() => {
-    if (selectedId === "bau-campus") return campusMapQuery();
+    if (spotKind === "campus") return campusMapQuery();
     if (selectedTransit) return transitMapQuery(selectedTransit.name);
     if (selectedLandmark) return landmarkMapQuery(selectedLandmark.name);
     return campusMapQuery();
-  }, [selectedId, selectedTransit, selectedLandmark]);
-
-  const mapTitle = useMemo(() => {
-    if (selectedId === "bau-campus") return BAU_CAMPUS.name;
-    if (selectedTransit) return selectedTransit.name;
-    if (selectedLandmark) return selectedLandmark.name;
-    return BAU_CAMPUS.name;
-  }, [selectedId, selectedTransit, selectedLandmark]);
-
-  const mapZoom = selectedId === "bau-campus" ? 17 : selectedTransit ? 17 : 16;
+  }, [spotKind, selectedTransit, selectedLandmark]);
 
   const directionsUrl = useMemo(() => {
-    if (selectedId === "bau-campus") {
-      return googleMapsDirectionsUrl(BAU_CAMPUS.address);
-    }
+    if (spotKind === "campus") return googleMapsDirectionsUrl(BAU_CAMPUS.address);
     const dest = selectedTransit
       ? transitMapQuery(selectedTransit.name)
       : selectedLandmark
         ? landmarkMapQuery(selectedLandmark.name)
         : BAU_CAMPUS.address;
     return googleMapsDirectionsUrl(dest, BAU_CAMPUS.address, "walking");
-  }, [selectedId, selectedTransit, selectedLandmark]);
+  }, [spotKind, selectedTransit, selectedLandmark]);
 
   const openInGoogleUrl = googleMapsSearchUrl(mapQuery);
 
@@ -106,7 +145,7 @@ function MapContent() {
         <div>
           <h1 className="text-3xl font-black text-white">BAU Connect Map</h1>
           <p className="text-white/50 text-sm mt-1">
-            Powered by Google Maps — accurate campus, Metro, and DC locations.
+            Tap any pin on the map or pick a station / landmark — the panel updates instantly.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -159,30 +198,16 @@ function MapContent() {
         </div>
       )}
 
-      <div className="flex flex-wrap gap-2 mb-4">
+      <div className="flex flex-wrap items-center gap-2 mb-3">
+        <span className="text-white/40 text-[11px] font-bold uppercase tracking-wide">Now viewing</span>
+        <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold bg-white text-primary">
+          {spotKind === "campus" && <span className="w-2 h-2 rounded-full bg-sky" />}
+          {spotKind === "transit" && <Train size={12} className="text-secondary" />}
+          {spotKind === "area" && <Landmark size={12} className="text-accent" />}
+          {selectedPin.title}
+        </span>
         <button
-          onClick={() => setSelectedId("bau-campus")}
-          className={`inline-flex items-center gap-2 px-3 py-2 rounded-full text-xs font-bold transition border ${
-            selectedId === "bau-campus" ? "bg-white text-primary border-white" : "bg-white/10 text-white/60 border-white/10"
-          }`}
-        >
-          <span className="w-2.5 h-2.5 rounded-full bg-sky" />
-          BAU campus
-        </button>
-        <button
-          onClick={() => setSelectedId(TRANSIT_SPOTS[0]?.id ?? "mcpherson")}
-          className="inline-flex items-center gap-2 px-3 py-2 rounded-full text-xs font-bold bg-white/10 text-white/60 border border-white/10"
-        >
-          <Train size={12} /> Metro stations
-        </button>
-        <button
-          onClick={() => setSelectedId(EXPLORE_DC[0]?.id ?? "whitehouse")}
-          className="inline-flex items-center gap-2 px-3 py-2 rounded-full text-xs font-bold bg-white/10 text-white/60 border border-white/10"
-        >
-          <Landmark size={12} /> Explore DC
-        </button>
-        <button
-          onClick={() => setSelectedId("bau-campus")}
+          onClick={() => selectSpot("bau-campus")}
           className="ml-auto inline-flex items-center gap-1 px-3 py-2 rounded-full text-[11px] font-bold bg-white/10 text-white/80"
         >
           <LocateFixed size={12} /> Recenter campus
@@ -190,10 +215,19 @@ function MapContent() {
       </div>
 
       <div className="grid lg:grid-cols-[1.6fr_1fr] gap-4 mb-6">
-        <GoogleMapEmbed query={mapQuery} zoom={mapZoom} title={mapTitle} />
+        <CampusMap
+          pins={pins}
+          activeLayers={["campus", "transit", "area"]}
+          selectedId={selectedId}
+          onSelect={pin => selectSpot(pin.id)}
+        />
 
-        <div className="bg-white rounded-3xl shadow-lg p-5 flex flex-col min-h-[280px]">
-          {selectedId === "bau-campus" && (
+        <div
+          ref={detailRef}
+          key={selectedId}
+          className="bg-white rounded-3xl shadow-lg p-5 flex flex-col min-h-[280px]"
+        >
+          {spotKind === "campus" && (
             <>
               <p className="text-[11px] font-bold uppercase tracking-wide text-sky mb-1">Campus</p>
               <h2 className="font-black text-primary text-lg mb-1">{BAU_CAMPUS.name}</h2>
@@ -208,52 +242,50 @@ function MapContent() {
                   <p className="text-xs text-gray-500">Floor {highlightedRoom.floor} · {highlightedRoom.blurb}</p>
                 </div>
               )}
-              <a
-                href={googleMapsDirectionsUrl(BAU_CAMPUS.address)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-auto text-center bg-primary text-white font-bold text-sm py-2.5 rounded-2xl"
-              >
-                Get directions to campus
-              </a>
             </>
           )}
 
-          {selectedTransit && (
+          {spotKind === "transit" && selectedTransit && (
             <>
               <p className="text-[11px] font-bold uppercase tracking-wide text-secondary mb-1 flex items-center gap-1">
                 <Train size={12} /> WMATA Metro
               </p>
               <h2 className="font-black text-primary text-xl mb-1">{selectedTransit.name}</h2>
               <p className="text-sm text-gray-600 leading-relaxed mb-4">{selectedTransit.note}</p>
-              <a
-                href={googleMapsDirectionsUrl(transitMapQuery(selectedTransit.name), BAU_CAMPUS.address, "walking")}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-auto text-center bg-primary text-white font-bold text-sm py-2.5 rounded-2xl"
-              >
-                Walk from campus
-              </a>
             </>
           )}
 
-          {selectedLandmark && (
+          {spotKind === "area" && selectedLandmark && (
             <>
               <p className="text-[11px] font-bold uppercase tracking-wide text-accent mb-1 flex items-center gap-1">
                 <Landmark size={12} /> Explore DC
               </p>
               <h2 className="font-black text-primary text-xl mb-1">{selectedLandmark.name}</h2>
               <p className="text-sm text-gray-600 leading-relaxed mb-4">{selectedLandmark.note}</p>
-              <a
-                href={googleMapsDirectionsUrl(landmarkMapQuery(selectedLandmark.name), BAU_CAMPUS.address, "walking")}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-auto text-center bg-primary text-white font-bold text-sm py-2.5 rounded-2xl"
-              >
-                Walk from campus
-              </a>
             </>
           )}
+
+          <div className="mb-4 rounded-2xl overflow-hidden border border-gray-100">
+            <GoogleMapEmbed
+              key={mapQuery}
+              query={mapQuery}
+              zoom={spotKind === "campus" ? 17 : 16}
+              title={selectedPin.title}
+              height="180px"
+              className="rounded-2xl shadow-none border-0"
+            />
+          </div>
+
+          <a
+            href={spotKind === "campus"
+              ? googleMapsDirectionsUrl(BAU_CAMPUS.address)
+              : googleMapsDirectionsUrl(mapQuery, BAU_CAMPUS.address, "walking")}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-auto text-center bg-primary text-white font-bold text-sm py-2.5 rounded-2xl"
+          >
+            {spotKind === "campus" ? "Get directions to campus" : "Walk from campus"}
+          </a>
         </div>
       </div>
 
@@ -262,12 +294,13 @@ function MapContent() {
           <h2 className="font-black text-primary text-lg mb-1 flex items-center gap-2">
             <Train size={18} className="text-secondary" /> All Metro stations
           </h2>
-          <p className="text-gray-500 text-sm mb-3">Every WMATA station — tap to show on Google Maps</p>
+          <p className="text-gray-500 text-sm mb-3">Tap a station — map and panel update together</p>
           <ul className="space-y-1.5 max-h-72 overflow-y-auto pr-1">
             {TRANSIT_SPOTS.map(s => (
               <li key={s.id}>
                 <button
-                  onClick={() => setSelectedId(s.id)}
+                  type="button"
+                  onClick={() => selectSpot(s.id)}
                   className={`w-full text-left p-3 rounded-2xl border transition ${
                     selectedId === s.id ? "border-secondary bg-secondary/10" : "border-gray-100 hover:border-secondary/40"
                   }`}
@@ -288,7 +321,8 @@ function MapContent() {
             {EXPLORE_DC.map(s => (
               <li key={s.id}>
                 <button
-                  onClick={() => setSelectedId(s.id)}
+                  type="button"
+                  onClick={() => selectSpot(s.id)}
                   className={`w-full text-left p-3 rounded-2xl border transition ${
                     selectedId === s.id ? "border-accent bg-accent/10" : "border-gray-100 hover:border-accent/40"
                   }`}
@@ -312,6 +346,7 @@ function MapContent() {
             {floors.map(f => (
               <button
                 key={f}
+                type="button"
                 onClick={() => setFloorFilter(f)}
                 className={`shrink-0 px-3 py-1.5 rounded-full text-[11px] font-bold transition ${
                   floorFilter === f ? "bg-primary text-white" : "bg-gray-100 text-gray-500"
