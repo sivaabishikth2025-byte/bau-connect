@@ -8,6 +8,7 @@ import Navbar from "@/components/Navbar";
 import { AppStarfield, appPageBg } from "@/components/AppShell";
 import {
   BAU_CAMPUS, CAMPUS_LOCATIONS, DC_SPOTS, TRANSIT_SPOTS, EXPLORE_DC, MAP_LAYERS,
+  NEAR_CAMPUS_TRANSIT_IDS,
   volunteerCategoryMeta
 } from "@/lib/constants";
 import { BASEMAPS, LAYER_COLORS, type BasemapId, type MapLayerId, type MapPin } from "@/lib/basemaps";
@@ -41,7 +42,7 @@ function MapContent() {
   const spotParam = searchParams.get("spot");
   const interactiveUrl = process.env.NEXT_PUBLIC_BAU_INTERACTIVE_MAP_URL;
 
-  const [activeLayers, setActiveLayers] = useState<MapLayerId[]>(["campus", "transit", "area"]);
+  const [activeLayers, setActiveLayers] = useState<MapLayerId[]>(["campus", "transit"]);
   const [basemap, setBasemap] = useState<BasemapId>("streets");
   const [selectedId, setSelectedId] = useState<string | null>(spotParam ? "bau-campus" : "bau-campus");
   const [floorFilter, setFloorFilter] = useState<string>("all");
@@ -125,7 +126,7 @@ function MapContent() {
         <div>
           <h1 className="text-3xl font-black text-white">BAU Connect Map</h1>
           <p className="text-white/50 text-sm mt-1">
-            Real Metro stations and DC landmarks around 1510 H Street NW. Campus rooms stay in the floor directory.
+            Verified locations for BAU at 1510 H Street NW, Metro stations, and DC landmarks.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -274,9 +275,11 @@ function MapContent() {
           <h2 className="font-black text-primary text-lg mb-1 flex items-center gap-2">
             <Train size={18} className="text-secondary" /> Metro near campus
           </h2>
-          <p className="text-gray-500 text-sm mb-3">Real WMATA stations. Tap to fly the map</p>
+          <p className="text-gray-500 text-sm mb-3">Stations closest to BAU — tap to fly the map</p>
           <ul className="space-y-1.5 max-h-72 overflow-y-auto pr-1">
-            {TRANSIT_SPOTS.map(s => (
+            {TRANSIT_SPOTS.filter(s =>
+              (NEAR_CAMPUS_TRANSIT_IDS as readonly string[]).includes(s.id)
+            ).map(s => (
               <li key={s.id}>
                 <button
                   onClick={() => {

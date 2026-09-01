@@ -82,9 +82,9 @@ export default function CampusMap({
     const map = L.map(containerRef.current, {
       zoomControl: false,
       attributionControl: true,
-      minZoom: 11,
-      maxZoom: 18,
-    }).setView([BAU_CAMPUS.lat, BAU_CAMPUS.lng], 14);
+    minZoom: 12,
+    maxZoom: 19,
+    }).setView([BAU_CAMPUS.lat, BAU_CAMPUS.lng], 16);
 
     const style = getBasemap(basemap);
     tileRef.current = L.tileLayer(style.url, {
