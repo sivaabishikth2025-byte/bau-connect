@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminAuth } from "@/lib/firebase-admin";
-import { sendSesEmail } from "@/lib/ses";
+import { mailCard, sendMail } from "@/lib/mail";
 
 export const runtime = "nodejs";
 
@@ -9,24 +9,15 @@ function appUrl() {
 }
 
 function verificationHtml(link: string, email: string) {
-  return `
-    <div style="font-family:Nunito,Arial,sans-serif;max-width:520px;margin:0 auto;padding:32px;background:#f4f7ff;border-radius:16px;">
-      <h1 style="color:#1C2D5A;font-size:22px;margin:0 0 12px;">Verify your BAU Connect email</h1>
-      <p style="color:#444;line-height:1.7;margin:0 0 16px;">
-        Hi — confirm <strong>${email}</strong> to finish setting up your BAU Connect account.
-      </p>
-      <a href="${link}" style="display:inline-block;background:#1C2D5A;color:#fff;padding:14px 28px;border-radius:12px;text-decoration:none;font-weight:700;margin:8px 0 20px;">
-        Verify email address
-      </a>
-      <p style="color:#666;font-size:14px;line-height:1.6;margin:0 0 12px;">
-        If the button does not work, copy and paste this link into your browser:
-      </p>
-      <p style="color:#1C2D5A;font-size:13px;word-break:break-all;margin:0 0 20px;">${link}</p>
-      <p style="color:#888;font-size:12px;line-height:1.6;margin:0;">
-        This message was sent by BAU Connect for Bay Atlantic University. If you did not sign up, you can ignore this email.
-      </p>
-    </div>
+  const inner = `
+    <p style="margin:0 0 16px;">Confirm <strong>${email}</strong> to finish setting up your BAU Connect account.</p>
+    <a href="${link}" style="display:inline-block;background:#1C2D5A;color:#fff;padding:14px 28px;border-radius:12px;text-decoration:none;font-weight:700;margin:8px 0 20px;">
+      Verify email address
+    </a>
+    <p style="color:#666;font-size:14px;line-height:1.6;margin:0 0 12px;">If the button does not work, copy this link:</p>
+    <p style="color:#1C2D5A;font-size:13px;word-break:break-all;margin:0;">${link}</p>
   `;
+  return mailCard(inner, "Verify your BAU Connect email");
 }
 
 export async function POST(req: NextRequest) {
@@ -50,7 +41,7 @@ export async function POST(req: NextRequest) {
 
     const subject = "Verify your BAU Connect email";
     const text = [
-      "Verify your BAU Connect email",
+      subject,
       "",
       `Confirm ${email} to finish setting up your account.`,
       "",
@@ -59,7 +50,7 @@ export async function POST(req: NextRequest) {
       "If you did not sign up for BAU Connect, you can ignore this email.",
     ].join("\n");
 
-    const messageId = await sendSesEmail({
+    const messageId = await sendMail({
       to: email,
       subject,
       html: verificationHtml(link, email),

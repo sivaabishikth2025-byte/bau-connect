@@ -1,14 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { sendSesEmail, getSesConfig } from "@/lib/ses";
+import { getMailFrom, mailConfigured, sendMail } from "@/lib/mail";
 
 export async function POST(req: NextRequest) {
-  const { fromRaw, accessKeyId, secretAccessKey } = getSesConfig();
-
-  if (!fromRaw) {
-    return NextResponse.json({ error: "SES_FROM_EMAIL is not set" }, { status: 500 });
+  if (!mailConfigured()) {
+    return NextResponse.json({ error: "RESEND_API_KEY is not set" }, { status: 500 });
   }
-  if (!accessKeyId || !secretAccessKey) {
-    return NextResponse.json({ error: "AWS credentials are not set" }, { status: 500 });
+  if (!getMailFrom()) {
+    return NextResponse.json({ error: "EMAIL_FROM is not set" }, { status: 500 });
   }
 
   const payload = await req.json();
@@ -89,7 +87,7 @@ export async function POST(req: NextRequest) {
     const results = [];
 
     for (const email of recipients) {
-      const messageId = await sendSesEmail({
+      const messageId = await sendMail({
         to: email,
         subject,
         html,
@@ -99,11 +97,9 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({ ok: true, results });
-  } catch (e: any) {
-    console.error("SES send error:", e);
-    return NextResponse.json(
-      { error: e?.message || "Failed to send email" },
-      { status: 500 }
-    );
+  } catch (e: unknown) {
+    const message = e instanceof Error ? e.message : "Failed to send email";
+    console.error("email send error:", e);
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

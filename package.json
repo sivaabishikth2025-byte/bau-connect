@@ -8,7 +8,6 @@
     "start": "next start"
   },
   "dependencies": {
-    "@aws-sdk/client-sesv2": "^3.1111.0",
     "@cloudinary/url-gen": "^1.22.0",
     "@netlify/plugin-nextjs": "^5.15.9",
     "@react-google-maps/api": "^2.20.8",
@@ -22,7 +21,8 @@
     "next": "^16.2.3",
     "qrcode.react": "^4.2.0",
     "react": "^18",
-    "react-dom": "^18"
+    "react-dom": "^18",
+    "resend": "^4.8.0"
   },
   "devDependencies": {
     "@types/leaflet": "^1.9.22",

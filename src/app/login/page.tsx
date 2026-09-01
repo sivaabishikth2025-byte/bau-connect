@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { signInWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
+import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import Link from "next/link";
 import BauLogo from "@/components/BauLogo";
@@ -25,8 +25,16 @@ export default function Login() {
     setResetMsg("");
     setResetLoading(true);
     try {
-      await sendPasswordResetEmail(auth, resetEmail);
-      setResetMsg("Reset link sent! Check your inbox.");
+      const res = await fetch("/api/auth/send-password-reset", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: resetEmail }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Failed");
+      }
+      setResetMsg("Reset link sent from baustudentconnect.com. Check inbox and spam.");
     } catch {
       setResetError("Couldn't send reset email. Check the address and try again.");
     } finally {
