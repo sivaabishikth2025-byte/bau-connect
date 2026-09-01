@@ -282,7 +282,7 @@ export default function Profile() {
             <p className="text-gray-400 text-xs mb-6">Share this so classmates can find your profile</p>
             <div ref={qrRef} className="flex justify-center mb-4 p-4 bg-gray-50 rounded-2xl">
               <QRCodeSVG value={profileUrl} size={200} fgColor="#1C2D5A" bgColor="#F4F7FF" level="H"
-                imageSettings={{ src: "/bau-logo.png", height: 36, width: 36, excavate: true }} />
+                imageSettings={{ src: "/bau-logo-light.png", height: 36, width: 36, excavate: true }} />
             </div>
             <p className="text-xs text-gray-400 mb-6 break-all">{profileUrl}</p>
             <div className="flex gap-3">
