@@ -71,6 +71,7 @@ const REFERRERS = [
   "http://127.0.0.1:3001/*",
   "http://127.0.0.1:3002/*",
   "https://baustudentconnect.com/*",
+  "https://www.baustudentconnect.com/*",
   "https://*.baustudentconnect.com/*",
   "https://bau-connect.netlify.app/*",
   "https://*.bau-connect.netlify.app/*",
