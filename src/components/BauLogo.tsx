@@ -3,8 +3,8 @@ type BauLogoTone = "light" | "dark";
 
 const SIZES: Record<BauLogoSize, { height: number; maxWidth: number }> = {
   nav: { height: 72, maxWidth: 400 },
-  auth: { height: 132, maxWidth: 520 },
-  landing: { height: 120, maxWidth: 520 },
+  auth: { height: 100, maxWidth: 280 },
+  landing: { height: 80, maxWidth: 340 },
   footer: { height: 88, maxWidth: 420 },
 };
 
@@ -29,8 +29,13 @@ export default function BauLogo({
     <img
       src={src}
       alt={alt}
-      className={`object-contain ${className}`}
-      style={{ height, maxWidth, width: "auto" }}
+      className={`block object-contain object-left ${className}`}
+      style={{
+        height,
+        maxHeight: height,
+        width: "auto",
+        maxWidth: `min(100%, ${maxWidth}px)`,
+      }}
     />
   );
 }

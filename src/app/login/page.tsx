@@ -75,8 +75,8 @@ export default function Login() {
       <div className="bg-white rounded-3xl shadow-xl p-8 w-full max-w-sm relative z-10">
 
         {/* Logo */}
-        <div className="flex justify-center mb-6">
-          <BauLogo size="auth" />
+        <div className="flex justify-center mb-6 w-full">
+          <BauLogo size="auth" className="mx-auto" />
         </div>
 
         {/* Title */}

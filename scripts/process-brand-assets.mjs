@@ -92,6 +92,48 @@ async function removeBackground(input, targets, tolerance) {
   });
 }
 
+/** Flood-fill white from image edges so enclosed logo colors stay intact. */
+async function removeWhiteBackground(input) {
+  const { data, info } = await sharp(input)
+    .ensureAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+
+  const { width, height } = info;
+  const pixels = Buffer.from(data);
+  const visited = new Uint8Array(width * height);
+  const queue = [];
+
+  const isBg = (x, y) => {
+    const i = (y * width + x) * 4;
+    const a = pixels[i + 3];
+    if (a < 24) return true;
+    return isWhiteish(pixels[i], pixels[i + 1], pixels[i + 2], a);
+  };
+
+  for (let x = 0; x < width; x++) {
+    queue.push([x, 0], [x, height - 1]);
+  }
+  for (let y = 0; y < height; y++) {
+    queue.push([0, y], [width - 1, y]);
+  }
+
+  while (queue.length) {
+    const [x, y] = queue.pop();
+    if (x < 0 || x >= width || y < 0 || y >= height) continue;
+    const idx = y * width + x;
+    if (visited[idx]) continue;
+    if (!isBg(x, y)) continue;
+    visited[idx] = 1;
+    pixels[(y * width + x) * 4 + 3] = 0;
+    queue.push([x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]);
+  }
+
+  return sharp(pixels, {
+    raw: { width, height, channels: 4 },
+  });
+}
+
 async function toLightLogo(input) {
   const { data, info } = await sharp(input)
     .ensureAlpha()
@@ -131,7 +173,7 @@ const logoDarkBuffer = await (await removeBackground(logoDarkSource, NAVY, 42)).
 await sharp(logoDarkBuffer).toFile(logoDarkOut);
 await sharp(logoDarkBuffer).toFile(logoDefaultOut);
 
-const logoLightBuffer = await (await removeBackground(logoLightSource, WHITE, 32)).trim().png().toBuffer();
+const logoLightBuffer = await (await removeWhiteBackground(logoLightSource)).trim().png().toBuffer();
 await sharp(logoLightBuffer).toFile(logoLightOut);
 
 const crestPipeline = (await removeBackground(faviconSource, WHITE, 28))

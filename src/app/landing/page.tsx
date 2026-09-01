@@ -220,18 +220,18 @@ export default function Landing() {
 
       <div className="bau">
         {/* NAV */}
-        <nav style={{position:"fixed",top:0,left:0,right:0,zIndex:100,display:"flex",alignItems:"center",justifyContent:"space-between",padding:"24px 56px"}}>
+        <nav style={{position:"fixed",top:0,left:0,right:0,zIndex:100,display:"grid",gridTemplateColumns:"auto 1fr auto",alignItems:"center",gap:32,padding:"20px 56px",minHeight:88}}>
           <div style={{position:"absolute",inset:0,background:"linear-gradient(to bottom,rgba(28,45,90,.92),transparent)",pointerEvents:"none"}}/>
-          <div style={{display:"flex",alignItems:"center",gap:12,position:"relative",zIndex:1}}>
+          <div style={{display:"flex",alignItems:"center",position:"relative",zIndex:1}}>
             <BauLogo size="landing" tone="dark" />
           </div>
-          <ul style={{display:"flex",gap:40,listStyle:"none",position:"relative",zIndex:1}}>
+          <ul style={{display:"flex",gap:40,listStyle:"none",justifyContent:"center",alignItems:"center",position:"relative",zIndex:1,margin:0,padding:0}}>
             <li><a href="#discover" className="nl">Explore</a></li>
             <li><a href="#how" className="nl">How It Works</a></li>
             <li><a href="#stories" className="nl">Stories</a></li>
             <li><Link href="/login" className="nl">Sign In</Link></li>
           </ul>
-          <Link href="/signup" style={{position:"relative",zIndex:1}}>
+          <Link href="/signup" style={{position:"relative",zIndex:1,justifySelf:"end"}}>
             <button className="bg">Join Free</button>
           </Link>
         </nav>
@@ -428,9 +428,9 @@ export default function Landing() {
           </div>
           <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:24}}>
             {[
-              {text:"I posted a ride to Metro after my late class and two people from my program joined. So much easier than going alone.",author:"Elif K.",loc:"Computer Science, BAU",accent:"var(--coral)"},
-              {text:"Everyone is from BAU which makes it comfortable. I found a study group for midterms in under a day.",author:"James T.",loc:"Business Admin, BAU",accent:"var(--gold)"},
-              {text:"We used the map to meet at The Bay, then walked to Lafayette Square. Finally talking to people outside my classes.",author:"Selin & Omar",loc:"BAU Students",accent:"var(--sky)"},
+              {text:"I posted a ride to Metro after my late class and two people from my program joined. So much easier than going alone.",author:"Priya M.",loc:"Computer Science, BAU",accent:"var(--coral)"},
+              {text:"Everyone is from BAU which makes it comfortable. I found a study group for midterms in under a day.",author:"Marcus L.",loc:"Business Admin, BAU",accent:"var(--gold)"},
+              {text:"We used the map to meet at The Bay, then walked to Lafayette Square. Finally talking to people outside my classes.",author:"Jordan & Alex",loc:"BAU Students",accent:"var(--sky)"},
             ].map(t=>(
               <div key={t.author} className="tc">
                 <div style={{position:"absolute",bottom:0,left:0,right:0,height:3,background:t.accent}}/>
