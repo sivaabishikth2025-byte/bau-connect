@@ -27,6 +27,7 @@ export async function sendEmailToAddress(
     title?: string;
     body?: string;
     firstMessage?: boolean;
+    matchId?: string;
   }
 ) {
   const recipients = (Array.isArray(to) ? to : [to]).filter(Boolean);
@@ -43,6 +44,7 @@ export async function sendEmailToAddress(
       title: opts.title,
       body: opts.body,
       firstMessage: opts.firstMessage,
+      matchId: opts.matchId,
       origin: appOrigin(),
     }),
   });
@@ -53,7 +55,7 @@ export async function sendEmailNotification(
   type: EmailType | string,
   fromName: string,
   url: string = "/",
-  extra?: { title?: string; body?: string; firstMessage?: boolean }
+  extra?: { title?: string; body?: string; firstMessage?: boolean; matchId?: string }
 ) {
   try {
     const snap = await getDoc(doc(db, "users", toUserId));
@@ -68,6 +70,7 @@ export async function sendEmailNotification(
       title: extra?.title,
       body: extra?.body,
       firstMessage: extra?.firstMessage,
+      matchId: extra?.matchId,
     });
   } catch (e) {
     console.error("sendEmailNotification error:", e);

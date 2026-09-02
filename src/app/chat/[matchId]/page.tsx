@@ -64,7 +64,6 @@ export default function Chat() {
     if (!trimmed) return;
     setText("");
 
-    const isFirstMessage = historyReady.current && messages.length === 0;
     const fromName = user!.displayName || "Someone";
 
     await addDoc(collection(db, "messages"), {
@@ -74,6 +73,7 @@ export default function Chat() {
     });
 
     if (otherUser) {
+      const isFirstMessage = historyReady.current && messages.length === 0;
       await notifyUser(otherUser.uid, {
         type: "message",
         title: isFirstMessage ? "New conversation" : "New message",
@@ -83,19 +83,19 @@ export default function Chat() {
         fromName,
       });
 
-      if (isFirstMessage) {
-        await sendEmailNotification(
-          otherUser.uid,
-          "message",
-          fromName,
-          `/chat/${matchId}`,
-          {
-            title: "New conversation on BAU Connect",
-            body: `${fromName} started a chat with you.`,
-            firstMessage: true,
-          }
-        );
-      }
+      // Server checks message count — existing chats with history never email.
+      await sendEmailNotification(
+        otherUser.uid,
+        "message",
+        fromName,
+        `/chat/${matchId}`,
+        {
+          title: "New conversation on BAU Connect",
+          body: `${fromName} started a chat with you.`,
+          firstMessage: true,
+          matchId,
+        }
+      );
     }
   };
 

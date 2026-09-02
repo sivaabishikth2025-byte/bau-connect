@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { adminDb } from "@/lib/firebase-admin";
 import { getMailFrom, mailConfigured, sendMail } from "@/lib/mail";
 
 export async function POST(req: NextRequest) {
@@ -10,15 +11,25 @@ export async function POST(req: NextRequest) {
   }
 
   const payload = await req.json();
-  const { to, type, fromName, url, title, body, origin: clientOrigin, firstMessage } = payload;
+  const { to, type, fromName, url, title, body, origin: clientOrigin, firstMessage, matchId } = payload;
 
   const recipients: string[] = (Array.isArray(to) ? to : [to]).filter(Boolean);
   if (!recipients.length) {
     return NextResponse.json({ error: "Missing recipient" }, { status: 400 });
   }
 
-  if (type === "message" && !firstMessage) {
-    return NextResponse.json({ ok: true, skipped: true });
+  if (type === "message") {
+    if (!firstMessage || !matchId) {
+      return NextResponse.json({ ok: true, skipped: true });
+    }
+    const thread = await adminDb()
+      .collection("messages")
+      .where("matchId", "==", String(matchId))
+      .get();
+    // Only email when this thread has exactly one message (brand-new conversation).
+    if (thread.size !== 1) {
+      return NextResponse.json({ ok: true, skipped: true });
+    }
   }
 
   const name = fromName || "A classmate";
