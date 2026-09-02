@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import {
   collection, query, where, orderBy, onSnapshot,
-  addDoc, serverTimestamp, doc, getDoc, updateDoc, arrayUnion
+  addDoc, serverTimestamp, doc, getDoc, updateDoc, arrayUnion, getDocs, limit
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
@@ -11,7 +11,6 @@ import { useParams, useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { ArrowLeft, Send, Check, CheckCheck } from "lucide-react";
 import Link from "next/link";
-import { sendPushNotification } from "@/lib/sendNotification";
 import { notifyUser } from "@/lib/inbox";
 
 export default function Chat() {
@@ -61,26 +60,27 @@ export default function Chat() {
     const trimmed = text.trim();
     if (!trimmed) return;
     setText("");
+
+    const prior = await getDocs(
+      query(collection(db, "messages"), where("matchId", "==", matchId), limit(1))
+    );
+    const isNewConversation = prior.empty;
+
     await addDoc(collection(db, "messages"), {
       matchId, senderId: user!.uid, text: trimmed,
       createdAt: serverTimestamp(),
       seenBy: [user!.uid]
     });
-    // Notify the other user
+
     if (otherUser) {
-      sendPushNotification(
-        otherUser.uid,
-        `New message 💬`,
-        `${user!.displayName || "Someone"}: ${trimmed.slice(0, 60)}`,
-        `/chat/${matchId}`
-      );
       await notifyUser(otherUser.uid, {
         type: "message",
-        title: "New message",
+        title: isNewConversation ? "New conversation" : "New message",
         body: `${user!.displayName || "Someone"}: ${trimmed.slice(0, 80)}`,
         url: `/chat/${matchId}`,
         fromUserId: user!.uid,
         fromName: user!.displayName || "Someone",
+        email: isNewConversation,
       });
     }
   };

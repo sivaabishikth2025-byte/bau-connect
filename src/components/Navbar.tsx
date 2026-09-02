@@ -6,8 +6,19 @@ import { signOut } from "firebase/auth";
 import { collection, onSnapshot, query, where } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
-import { Users, CalendarDays, Map, UserPlus, User, LogOut, HandHeart, Menu, X, Bell, Shield } from "lucide-react";
+import {
+  Users, CalendarDays, Map, UserPlus, User, LogOut, HandHeart, Menu, Bell, Shield,
+} from "lucide-react";
 import BauLogo from "@/components/BauLogo";
+
+const MAIN_LINKS = [
+  { href: "/activities", label: "Feed", icon: CalendarDays },
+  { href: "/dashboard", label: "People", icon: Users },
+  { href: "/connections", label: "Connect", icon: UserPlus },
+  { href: "/map", label: "Map", icon: Map },
+  { href: "/notifications", label: "Alerts", icon: Bell, showBadge: true },
+  { href: "/profile", label: "Profile", icon: User },
+] as const;
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -17,19 +28,11 @@ export default function Navbar() {
   const [unread, setUnread] = useState(0);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  const links = [
-    { href: "/dashboard", label: "People", icon: Users },
-    { href: "/activities", label: "Feed", icon: CalendarDays },
-    { href: "/map", label: "Map", icon: Map },
-    { href: "/volunteers", label: "Volunteer", icon: HandHeart },
-    { href: "/connections", label: "Connect", icon: UserPlus },
-    { href: "/profile", label: "Profile", icon: User },
-  ];
-
   const isActive = (href: string) =>
     pathname === href ||
     (href === "/connections" && (pathname === "/matches" || pathname === "/liked-me")) ||
-    (href === "/volunteers" && pathname.startsWith("/volunteers"));
+    (href === "/volunteers" && pathname.startsWith("/volunteers")) ||
+    (href === "/notifications" && pathname === "/notifications");
 
   useEffect(() => {
     if (!user) {
@@ -61,20 +64,21 @@ export default function Navbar() {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 shadow-lg z-50 md:top-0 md:bottom-auto md:border-t-0 md:border-b md:shadow-md md:h-20">
-      <div className="max-w-screen-xl mx-auto flex h-full items-center justify-around md:justify-between px-1 md:px-6 py-2 md:py-0">
+      <div className="max-w-screen-xl mx-auto flex h-full items-center justify-between px-1 md:px-6 py-2 md:py-0">
         <div className="hidden md:flex items-center shrink-0 min-w-0">
           <Link href="/landing" className="flex items-center shrink-0">
             <BauLogo size="nav" alt="BAU Connect" className="cursor-pointer hover:opacity-90 transition shrink-0" />
           </Link>
         </div>
-        <div className="flex items-center gap-0 md:gap-1 w-full md:w-auto justify-around md:justify-end overflow-visible">
-          {links.map(({ href, label, icon: Icon }) => {
+
+        <div className="flex items-center gap-0 md:gap-1 flex-1 md:flex-none justify-around md:justify-end overflow-visible">
+          {MAIN_LINKS.map(({ href, label, icon: Icon, showBadge }) => {
             const active = isActive(href);
             return (
               <Link
                 key={href}
                 href={href}
-                className={`flex flex-col md:flex-row items-center gap-0.5 md:gap-1.5 px-1.5 md:px-2.5 py-2 rounded-2xl transition text-[9px] md:text-sm font-semibold shrink-0 ${
+                className={`relative flex flex-col md:flex-row items-center gap-0.5 md:gap-1.5 px-1.5 md:px-2.5 py-2 rounded-2xl transition text-[9px] md:text-sm font-semibold shrink-0 ${
                   active
                     ? "text-white bg-primary"
                     : "text-gray-400 hover:text-primary hover:bg-light"
@@ -82,6 +86,11 @@ export default function Navbar() {
               >
                 <Icon size={16} className="md:w-[18px] md:h-[18px]" />
                 <span>{label}</span>
+                {showBadge && unread > 0 && (
+                  <span className="absolute top-0.5 right-0.5 md:top-1 md:right-1 min-w-[14px] h-3.5 px-1 rounded-full bg-accent text-white text-[8px] font-black flex items-center justify-center">
+                    {unread > 9 ? "9+" : unread}
+                  </span>
+                )}
               </Link>
             );
           })}
@@ -89,20 +98,15 @@ export default function Navbar() {
           <div ref={menuRef} className="relative shrink-0">
             <button
               onClick={() => setMenuOpen(o => !o)}
-              className={`relative flex flex-col md:flex-row items-center gap-0.5 md:gap-1.5 px-1.5 md:px-2.5 py-2 rounded-2xl transition text-[9px] md:text-sm font-semibold ${
-                menuOpen || pathname === "/notifications" || pathname.startsWith("/admin")
+              className={`flex flex-col md:flex-row items-center gap-0.5 md:gap-1.5 px-1.5 md:px-2.5 py-2 rounded-2xl transition text-[9px] md:text-sm font-semibold ${
+                menuOpen || pathname.startsWith("/volunteers") || pathname.startsWith("/admin")
                   ? "text-white bg-primary"
                   : "text-gray-400 hover:text-primary hover:bg-light"
               }`}
-              aria-label="Menu"
+              aria-label="More"
             >
-              {menuOpen ? <X size={18} /> : <Menu size={18} />}
-              <span>Menu</span>
-              {unread > 0 && !menuOpen && (
-                <span className="absolute -top-0.5 right-0 min-w-[16px] h-4 px-1 rounded-full bg-accent text-white text-[9px] font-black flex items-center justify-center">
-                  {unread > 9 ? "9+" : unread}
-                </span>
-              )}
+              <Menu size={18} className="md:w-[18px] md:h-[18px]" />
+              <span>More</span>
             </button>
 
             {menuOpen && (
@@ -110,19 +114,12 @@ export default function Navbar() {
                 <button
                   onClick={() => {
                     setMenuOpen(false);
-                    router.push("/notifications");
+                    router.push("/volunteers");
                   }}
                   className="w-full flex items-center gap-3 px-4 py-3.5 text-left hover:bg-light transition"
                 >
-                  <span className="relative">
-                    <Bell size={18} className="text-primary" />
-                    {unread > 0 && (
-                      <span className="absolute -top-1.5 -right-1.5 min-w-[14px] h-3.5 px-1 rounded-full bg-accent text-white text-[8px] font-black flex items-center justify-center">
-                        {unread > 9 ? "9+" : unread}
-                      </span>
-                    )}
-                  </span>
-                  <span className="font-bold text-sm text-gray-900">Notifications</span>
+                  <HandHeart size={18} className="text-primary" />
+                  <span className="font-bold text-sm text-gray-900">Volunteer</span>
                 </button>
                 {isAdmin && (
                   <button

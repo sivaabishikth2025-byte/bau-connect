@@ -49,6 +49,7 @@ export async function sendFollowRequest(opts: {
     url: "/connections?tab=requests",
     fromUserId: opts.fromUserId,
     fromName: opts.fromName,
+    email: true,
   });
 
   return { status: "requested" as const };

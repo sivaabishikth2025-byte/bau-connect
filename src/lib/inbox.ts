@@ -22,6 +22,8 @@ export interface InboxPayload {
   url: string;
   fromUserId?: string;
   fromName?: string;
+  /** Send email only when true — keeps mail for new chats and campus posts. */
+  email?: boolean;
 }
 
 export async function notifyUser(toUserId: string, payload: InboxPayload) {
@@ -34,19 +36,21 @@ export async function notifyUser(toUserId: string, payload: InboxPayload) {
       createdAt: serverTimestamp(),
     });
     await sendPushNotification(toUserId, payload.title, payload.body, payload.url);
-    await sendEmailNotification(
-      toUserId,
-      payload.type,
-      payload.fromName || "A classmate",
-      payload.url,
-      { title: payload.title, body: payload.body }
-    );
+    if (payload.email) {
+      await sendEmailNotification(
+        toUserId,
+        payload.type,
+        payload.fromName || "A classmate",
+        payload.url,
+        { title: payload.title, body: payload.body }
+      );
+    }
   } catch (e) {
     console.error("notifyUser error:", e);
   }
 }
 
-/** Write a personal inbox item + email for every BAU Connect user except the sender. */
+/** In-app + push for everyone; email only when payload.email is true (e.g. campus posts). */
 export async function notifyAllUsers(exceptUserId: string | undefined, payload: InboxPayload) {
   try {
     const snap = await getDocs(collection(db, "users"));
@@ -73,7 +77,7 @@ export async function notifyAllUsers(exceptUserId: string | undefined, payload: 
         ...slice.map(userDoc =>
           sendPushNotification(userDoc.id, payload.title, payload.body, payload.url)
         ),
-        emails.length
+        payload.email && emails.length
           ? sendEmailToAddress(emails, {
               type: payload.type,
               fromName: payload.fromName,

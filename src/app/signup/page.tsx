@@ -27,10 +27,21 @@ export default function Signup() {
     setLoading(true);
     try {
       await createUserWithEmailAndPassword(auth, email, password);
-      await sendVerificationEmail();
+      try {
+        await sendVerificationEmail();
+      } catch {
+        // Account was created; let them resend from the verify page once email is configured.
+      }
       router.replace("/verify-email");
     } catch (e: any) {
-      setError(e.message);
+      const msg = String(e?.message || "");
+      if (msg.includes("email-already-in-use")) {
+        setError("This email already has an account. Try logging in or use Resend email on the verify page.");
+      } else if (msg.includes("unrecognised IP") || msg.includes("authorized_ips")) {
+        setError("Account setup is in progress. Ask the site admin to enable Brevo email sending, then try Resend email.");
+      } else {
+        setError(msg);
+      }
     } finally {
       setLoading(false);
     }

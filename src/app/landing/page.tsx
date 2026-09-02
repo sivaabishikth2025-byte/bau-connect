@@ -226,8 +226,8 @@ export default function Landing() {
             <BauLogo size="landing" tone="dark" />
           </div>
           <ul style={{display:"flex",gap:40,listStyle:"none",justifyContent:"center",alignItems:"center",position:"relative",zIndex:1,margin:0,padding:0}}>
-            <li><a href="#discover" className="nl">Explore</a></li>
             <li><a href="#how" className="nl">How It Works</a></li>
+            <li><a href="#discover" className="nl">Explore</a></li>
             <li><a href="#stories" className="nl">Stories</a></li>
             <li><Link href="/login" className="nl">Sign In</Link></li>
           </ul>

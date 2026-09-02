@@ -120,6 +120,7 @@ export default function AdminPage() {
         url: "/volunteers",
         fromUserId: user.uid,
         fromName: profile.name,
+        email: true,
       });
       resetVolForm();
       setShowCreate(false);

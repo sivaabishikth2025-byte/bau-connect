@@ -23,11 +23,13 @@ export async function sendMail(opts: {
   subject: string;
   html: string;
   text: string;
+  tag?: string;
 }) {
   const apiKey = process.env.BREVO_API_KEY;
   if (!apiKey) throw new Error("BREVO_API_KEY is not set");
 
   const from = parseFrom(getMailFrom());
+
   const res = await fetch("https://api.brevo.com/v3/smtp/email", {
     method: "POST",
     headers: {
@@ -42,6 +44,10 @@ export async function sendMail(opts: {
       subject: opts.subject,
       htmlContent: opts.html,
       textContent: opts.text,
+      tags: [opts.tag || "transactional"],
+      headers: {
+        "X-Mailer": "BAU-Connect",
+      },
     }),
   });
 

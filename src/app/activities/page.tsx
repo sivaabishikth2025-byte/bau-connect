@@ -95,6 +95,7 @@ export default function ActivitiesPage() {
           url: "/activities",
           fromUserId: user.uid,
           fromName: profile.name,
+          email: true,
         });
       }
       resetForm();

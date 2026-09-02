@@ -12,6 +12,10 @@ export async function sendVerificationEmail() {
 
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
-    throw new Error(data.error || "Could not send verification email");
+    const raw = data.error || "Could not send verification email";
+    if (/unrecognised IP|authorized_ips/i.test(raw)) {
+      throw new Error("Email service is temporarily blocked. The site admin needs to disable Brevo IP restrictions.");
+    }
+    throw new Error(raw);
   }
 }

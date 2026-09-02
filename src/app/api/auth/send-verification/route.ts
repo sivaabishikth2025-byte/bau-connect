@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
       handleCodeInApp: false,
     });
 
-    const subject = "Verify your BAU Connect email";
+    const subject = "Confirm your BAU Connect account";
     const text = [
       subject,
       "",
@@ -55,6 +55,7 @@ export async function POST(req: NextRequest) {
       subject,
       html: verificationHtml(link, email),
       text,
+      tag: "verification",
     });
 
     return NextResponse.json({ ok: true, messageId });
