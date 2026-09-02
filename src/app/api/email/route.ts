@@ -10,11 +10,15 @@ export async function POST(req: NextRequest) {
   }
 
   const payload = await req.json();
-  const { to, type, fromName, url, title, body, origin: clientOrigin } = payload;
+  const { to, type, fromName, url, title, body, origin: clientOrigin, firstMessage } = payload;
 
   const recipients: string[] = (Array.isArray(to) ? to : [to]).filter(Boolean);
   if (!recipients.length) {
     return NextResponse.json({ error: "Missing recipient" }, { status: 400 });
+  }
+
+  if (type === "message" && !firstMessage) {
+    return NextResponse.json({ ok: true, skipped: true });
   }
 
   const name = fromName || "A classmate";

@@ -36,7 +36,8 @@ export async function notifyUser(toUserId: string, payload: InboxPayload) {
       createdAt: serverTimestamp(),
     });
     await sendPushNotification(toUserId, payload.title, payload.body, payload.url);
-    if (payload.email) {
+    // Chat replies should never email — only the dedicated first-message path may send mail.
+    if (payload.email && payload.type !== "message") {
       await sendEmailNotification(
         toUserId,
         payload.type,

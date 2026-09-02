@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import {
   collection, query, where, orderBy, onSnapshot,
-  addDoc, serverTimestamp, doc, getDoc, updateDoc, arrayUnion, getDocs, limit
+  addDoc, serverTimestamp, doc, getDoc, updateDoc, arrayUnion
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
@@ -12,6 +12,7 @@ import { format } from "date-fns";
 import { ArrowLeft, Send, Check, CheckCheck } from "lucide-react";
 import Link from "next/link";
 import { notifyUser } from "@/lib/inbox";
+import { sendEmailNotification } from "@/lib/sendEmail";
 
 export default function Chat() {
   const { matchId } = useParams<{ matchId: string }>();
@@ -21,6 +22,7 @@ export default function Chat() {
   const [text, setText] = useState("");
   const [otherUser, setOtherUser] = useState<UserProfile | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const historyReady = useRef(false);
 
   useEffect(() => {
     if (!matchId || !user) return;
@@ -40,6 +42,7 @@ export default function Chat() {
       orderBy("createdAt", "asc")
     );
     return onSnapshot(q, snap => {
+      historyReady.current = true;
       const msgs = snap.docs.map(d => ({ id: d.id, ...d.data() } as Message));
       setMessages(msgs);
       setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "smooth" }), 50);
@@ -61,10 +64,8 @@ export default function Chat() {
     if (!trimmed) return;
     setText("");
 
-    const prior = await getDocs(
-      query(collection(db, "messages"), where("matchId", "==", matchId), limit(1))
-    );
-    const isNewConversation = prior.empty;
+    const isFirstMessage = historyReady.current && messages.length === 0;
+    const fromName = user!.displayName || "Someone";
 
     await addDoc(collection(db, "messages"), {
       matchId, senderId: user!.uid, text: trimmed,
@@ -75,13 +76,26 @@ export default function Chat() {
     if (otherUser) {
       await notifyUser(otherUser.uid, {
         type: "message",
-        title: isNewConversation ? "New conversation" : "New message",
-        body: `${user!.displayName || "Someone"}: ${trimmed.slice(0, 80)}`,
+        title: isFirstMessage ? "New conversation" : "New message",
+        body: `${fromName}: ${trimmed.slice(0, 80)}`,
         url: `/chat/${matchId}`,
         fromUserId: user!.uid,
-        fromName: user!.displayName || "Someone",
-        email: isNewConversation,
+        fromName,
       });
+
+      if (isFirstMessage) {
+        await sendEmailNotification(
+          otherUser.uid,
+          "message",
+          fromName,
+          `/chat/${matchId}`,
+          {
+            title: "New conversation on BAU Connect",
+            body: `${fromName} started a chat with you.`,
+            firstMessage: true,
+          }
+        );
+      }
     }
   };
 
