@@ -9,16 +9,22 @@ import { useAuth } from "@/context/AuthContext";
 import {
   Users, CalendarDays, Map, UserPlus, User, LogOut, HandHeart, Menu, Bell, Shield,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import BauLogo from "@/components/BauLogo";
 
-const MAIN_LINKS = [
+const MAIN_LINKS: {
+  href: string;
+  label: string;
+  icon: LucideIcon;
+  showBadge?: boolean;
+}[] = [
   { href: "/activities", label: "Feed", icon: CalendarDays },
   { href: "/dashboard", label: "People", icon: Users },
   { href: "/connections", label: "Connect", icon: UserPlus },
   { href: "/map", label: "Map", icon: Map },
   { href: "/notifications", label: "Alerts", icon: Bell, showBadge: true },
   { href: "/profile", label: "Profile", icon: User },
-] as const;
+];
 
 export default function Navbar() {
   const pathname = usePathname();
