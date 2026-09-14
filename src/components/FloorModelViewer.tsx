@@ -2,7 +2,8 @@
 
 import { createElement, useEffect, useRef, useState } from "react";
 
-export default function FloorModelViewer({ onClose }: { onClose: () => void }) {
+export default function FloorModelViewer({ floor, onClose }: { floor: string; onClose: () => void }) {
+  const label = floor === "1" ? "The Bay · 1st floor" : "2nd floor";
   const dialog = useRef<HTMLDialogElement>(null);
   const viewer = useRef<HTMLElement>(null);
   const [ready, setReady] = useState(false);
@@ -42,18 +43,18 @@ export default function FloorModelViewer({ onClose }: { onClose: () => void }) {
   return (
     <dialog ref={dialog} onCancel={onClose} onClick={e => {
       if (e.target === dialog.current) onClose();
-    }} aria-labelledby="bay-model-title"
+    }} aria-labelledby="floor-model-title"
       className="w-[calc(100%-2rem)] max-w-5xl rounded-3xl p-0 shadow-2xl backdrop:bg-black/60">
       <div className="bg-white p-4 sm:p-6">
         <div className="flex items-center justify-between gap-4">
-          <h2 id="bay-model-title" className="text-xl font-bold text-primary">The Bay · 1st floor</h2>
+          <h2 id="floor-model-title" className="text-xl font-bold text-primary">{label}</h2>
           <button autoFocus onClick={onClose} className="rounded-xl px-4 py-2 bg-gray-100 font-semibold">Close</button>
         </div>
         <div className="relative mt-4 rounded-2xl bg-slate-100 overflow-hidden" style={{ height: "min(65vh, 600px)" }}>
           {ready && !error && createElement("model-viewer", {
             ref: viewer,
-            src: "/models/bau-floor-1.glb",
-            alt: "Interactive 3D model of The Bay on the first floor",
+            src: "/models/bau-floor-" + floor + ".glb",
+            alt: "Interactive 3D model of " + label,
             "camera-controls": "",
             "auto-rotate": rotating ? "" : undefined,
             "auto-rotate-delay": "1500",
@@ -63,7 +64,7 @@ export default function FloorModelViewer({ onClose }: { onClose: () => void }) {
             "touch-action": "none",
             style: { width: "100%", height: "100%" },
           })}
-          {!loaded && !error && <p role="status" className="absolute inset-0 flex items-center justify-center pointer-events-none">Loading The Bay…</p>}
+          {!loaded && !error && <p role="status" className="absolute inset-0 flex items-center justify-center pointer-events-none">Loading {label}…</p>}
           {error && <div role="alert" className="absolute inset-0 flex flex-col items-center justify-center gap-3 p-6 text-center">
             <p>The model could not load. Please close the viewer and try again.</p>
           </div>}
@@ -79,3 +80,4 @@ export default function FloorModelViewer({ onClose }: { onClose: () => void }) {
     </dialog>
   );
 }
+
