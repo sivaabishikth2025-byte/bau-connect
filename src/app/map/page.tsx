@@ -20,7 +20,7 @@ import {
 import { VolunteerJob } from "@/types";
 import {
   ExternalLink, Navigation, Train,
-  HandHeart, Users, LocateFixed, Building2, Landmark
+  HandHeart, Users, LocateFixed, Landmark
 } from "lucide-react";
 import Link from "next/link";
 
@@ -40,7 +40,6 @@ function MapContent() {
   const detailRef = useRef<HTMLDivElement>(null);
 
   const [selectedId, setSelectedId] = useState<string>("bau-campus");
-  const [floorFilter, setFloorFilter] = useState<string>("all");
   const [volunteerJobs, setVolunteerJobs] = useState<(VolunteerJob & { id: string })[]>([]);
 
   const selectSpot = useCallback((id: string) => {
@@ -51,11 +50,7 @@ function MapContent() {
   }, []);
 
   useEffect(() => {
-    if (spotParam) {
-      setSelectedId("bau-campus");
-      const room = CAMPUS_LOCATIONS.find(c => c.id === spotParam);
-      if (room) setFloorFilter(room.floor);
-    }
+    if (spotParam) setSelectedId("bau-campus");
   }, [spotParam]);
 
   useEffect(() => {
@@ -72,13 +67,6 @@ function MapContent() {
       }
     })();
   }, []);
-
-  const floors = useMemo(() => ["all", ...BUILDING_FLOORS], []);
-
-  const rooms = useMemo(
-    () => CAMPUS_LOCATIONS.filter(c => floorFilter === "all" || c.floor === floorFilter),
-    [floorFilter]
-  );
 
   const highlightedRoom = CAMPUS_LOCATIONS.find(c => c.id === spotParam);
   const selectedTransit = TRANSIT_SPOTS.find(s => s.id === selectedId);
@@ -302,45 +290,15 @@ function MapContent() {
 
       <div className="grid md:grid-cols-2 gap-4">
         <div className="bg-white rounded-3xl shadow-lg p-5">
-          <h2 className="font-black text-primary text-lg mb-1 flex items-center gap-2">
-            <Building2 size={18} className="text-sky" /> Floor directory
-          </h2>
-          <p className="text-gray-500 text-sm mb-3">Indoor rooms inside the same building</p>
-          <div className="flex gap-2 overflow-x-auto pb-2 mb-3 scrollbar-hide">
-            {floors.map(f => (
-              <button
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            {BUILDING_FLOORS.map(f => (
+              <div
                 key={f}
-                type="button"
-                onClick={() => setFloorFilter(f)}
-                className={`shrink-0 px-3 py-1.5 rounded-full text-[11px] font-bold transition ${
-                  floorFilter === f ? "bg-primary text-white" : "bg-gray-100 text-gray-500"
-                }`}
+                className="px-3 py-3 rounded-2xl bg-gray-50 border border-gray-100 text-center font-bold text-sm text-primary"
               >
-                {f === "all" ? "All floors" : floorLabel(f)}
-              </button>
+                {floorLabel(f)}
+              </div>
             ))}
-          </div>
-          <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
-            {rooms.length === 0 ? (
-              <p className="text-sm text-gray-400 py-2">No rooms listed on this floor yet.</p>
-            ) : (
-              rooms.map(c => (
-                <div
-                  key={c.id}
-                  className={`p-3 rounded-2xl border ${
-                    spotParam === c.id ? "border-primary bg-primary/5" : "border-gray-100"
-                  }`}
-                >
-                  <p className="font-bold text-gray-900 text-sm">{c.name}</p>
-                  <p className="text-xs text-gray-500 mt-0.5">
-                    {BUILDING_FLOORS.includes(c.floor as (typeof BUILDING_FLOORS)[number])
-                      ? floorLabel(c.floor)
-                      : c.floor}{" "}
-                    · {c.blurb}
-                  </p>
-                </div>
-              ))
-            )}
           </div>
         </div>
 
