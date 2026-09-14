@@ -7,8 +7,8 @@ import Navbar from "@/components/Navbar";
 import dynamic from "next/dynamic";
 import { AppStarfield, appPageBg } from "@/components/AppShell";
 import {
-  BAU_CAMPUS, CAMPUS_LOCATIONS, TRANSIT_SPOTS, EXPLORE_DC,
-  volunteerCategoryMeta
+  BAU_CAMPUS, BUILDING_FLOORS, CAMPUS_LOCATIONS, TRANSIT_SPOTS, EXPLORE_DC,
+  floorLabel, volunteerCategoryMeta
 } from "@/lib/constants";
 import {
   campusMapQuery,
@@ -73,10 +73,7 @@ function MapContent() {
     })();
   }, []);
 
-  const floors = useMemo(() => {
-    const set = new Set(CAMPUS_LOCATIONS.map(c => c.floor));
-    return ["all", ...Array.from(set)];
-  }, []);
+  const floors = useMemo(() => ["all", ...BUILDING_FLOORS], []);
 
   const rooms = useMemo(
     () => CAMPUS_LOCATIONS.filter(c => floorFilter === "all" || c.floor === floorFilter),
@@ -208,7 +205,12 @@ function MapContent() {
                 <div className="mb-4 rounded-2xl bg-sky/10 border border-sky/20 p-3">
                   <p className="text-xs font-bold text-sky">Looking for</p>
                   <p className="font-bold text-primary text-sm">{highlightedRoom.name}</p>
-                  <p className="text-xs text-gray-500">Floor {highlightedRoom.floor} · {highlightedRoom.blurb}</p>
+                  <p className="text-xs text-gray-500">
+                    {BUILDING_FLOORS.includes(highlightedRoom.floor as (typeof BUILDING_FLOORS)[number])
+                      ? floorLabel(highlightedRoom.floor)
+                      : highlightedRoom.floor}{" "}
+                    · {highlightedRoom.blurb}
+                  </p>
                 </div>
               )}
             </>
@@ -314,22 +316,31 @@ function MapContent() {
                   floorFilter === f ? "bg-primary text-white" : "bg-gray-100 text-gray-500"
                 }`}
               >
-                {f === "all" ? "All floors" : `Floor ${f}`}
+                {f === "all" ? "All floors" : floorLabel(f)}
               </button>
             ))}
           </div>
           <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
-            {rooms.map(c => (
-              <div
-                key={c.id}
-                className={`p-3 rounded-2xl border ${
-                  spotParam === c.id ? "border-primary bg-primary/5" : "border-gray-100"
-                }`}
-              >
-                <p className="font-bold text-gray-900 text-sm">{c.name}</p>
-                <p className="text-xs text-gray-500 mt-0.5">Floor {c.floor} · {c.blurb}</p>
-              </div>
-            ))}
+            {rooms.length === 0 ? (
+              <p className="text-sm text-gray-400 py-2">No rooms listed on this floor yet.</p>
+            ) : (
+              rooms.map(c => (
+                <div
+                  key={c.id}
+                  className={`p-3 rounded-2xl border ${
+                    spotParam === c.id ? "border-primary bg-primary/5" : "border-gray-100"
+                  }`}
+                >
+                  <p className="font-bold text-gray-900 text-sm">{c.name}</p>
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    {BUILDING_FLOORS.includes(c.floor as (typeof BUILDING_FLOORS)[number])
+                      ? floorLabel(c.floor)
+                      : c.floor}{" "}
+                    · {c.blurb}
+                  </p>
+                </div>
+              ))
+            )}
           </div>
         </div>
 

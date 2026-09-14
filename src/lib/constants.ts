@@ -71,8 +71,22 @@ export const BAU_CAMPUS = {
   website: "https://bau.edu/location/",
 } as const;
 
+export const BUILDING_FLOORS = ["1", "2", "3", "4", "5", "6", "7", "8", "9"] as const;
+
+export function floorLabel(floor: string) {
+  if (floor === "1") return "The Bay";
+  const n = Number(floor);
+  if (!Number.isFinite(n) || n < 1) return floor;
+  const suffix =
+    n % 10 === 1 && n % 100 !== 11 ? "st"
+    : n % 10 === 2 && n % 100 !== 12 ? "nd"
+    : n % 10 === 3 && n % 100 !== 13 ? "rd"
+    : "th";
+  return `${n}${suffix} floor`;
+}
+
 export const CAMPUS_LOCATIONS = [
-  { id: "bay", name: "The Bay (Student Union)", floor: "Multiple", blurb: "Community hub: events, seating, and student life.", lat: 38.8999303, lng: -77.0342998, kind: "campus" as const },
+  { id: "bay", name: "The Bay (Student Union)", floor: "1", blurb: "Community hub: events, seating, and student life.", lat: 38.8999303, lng: -77.0342998, kind: "campus" as const },
   { id: "library", name: "Library & study areas", floor: "2", blurb: "Quiet study, resources, and group tables.", lat: 38.8999303, lng: -77.0342998, kind: "campus" as const },
   { id: "cyber", name: "Cyber Security Lab", floor: "2", blurb: "Specialized lab space for tech programs.", lat: 38.8999303, lng: -77.0342998, kind: "campus" as const },
   { id: "computer", name: "Computer Lab", floor: "2", blurb: "27-station lab for coursework and projects.", lat: 38.8999303, lng: -77.0342998, kind: "campus" as const },
@@ -80,7 +94,7 @@ export const CAMPUS_LOCATIONS = [
   { id: "game", name: "Game Room", floor: "Campus", blurb: "Relax and meet people between classes.", lat: 38.8999303, lng: -77.0342998, kind: "campus" as const },
   { id: "writing", name: "Writing Center", floor: "Campus", blurb: "Support for papers and academic writing.", lat: 38.8999303, lng: -77.0342998, kind: "campus" as const },
   { id: "outdoor", name: "Outdoor seating", floor: "Ground", blurb: "Meet up outside near H Street.", lat: 38.899880, lng: -77.034250, kind: "campus" as const },
-  { id: "deli", name: "Campus deli", floor: "1", blurb: "Meals, snacks, and drinks on the first floor.", lat: 38.8999303, lng: -77.0342998, kind: "campus" as const },
+  { id: "deli", name: "Campus deli", floor: "1", blurb: "Meals, snacks, and drinks on The Bay level.", lat: 38.8999303, lng: -77.0342998, kind: "campus" as const },
   { id: "admissions", name: "Admissions & front desk", floor: "1", blurb: "Tours, check-in, and campus information.", lat: 38.8999303, lng: -77.0342998, kind: "campus" as const },
 ] as const;
 
