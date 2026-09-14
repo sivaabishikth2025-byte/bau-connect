@@ -31,9 +31,12 @@ const InteractiveGoogleMap = dynamic(() => import("@/components/InteractiveGoogl
   ),
 });
 
+const FloorModelViewer = dynamic(() => import("@/components/FloorModelViewer"), { ssr: false });
+
 type SpotKind = "campus" | "transit" | "area";
 
 function MapContent() {
+  const [bayOpen, setBayOpen] = useState(false);
   const searchParams = useSearchParams();
   const spotParam = searchParams.get("spot");
   const interactiveUrl = process.env.NEXT_PUBLIC_BAU_INTERACTIVE_MAP_URL;
@@ -99,6 +102,7 @@ function MapContent() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 pt-8 relative z-10 pb-24 md:pb-8">
+      {bayOpen && <FloorModelViewer onClose={() => setBayOpen(false)} />}
       <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-5">
         <div>
           <h1 className="text-3xl font-black text-white">BAU Connect Map</h1>
@@ -292,12 +296,17 @@ function MapContent() {
         <div className="bg-white rounded-3xl shadow-lg p-5">
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
             {BUILDING_FLOORS.map(f => (
-              <div
+              <button
                 key={f}
-                className="px-3 py-3 rounded-2xl bg-gray-50 border border-gray-100 text-center font-bold text-sm text-primary"
+                type="button"
+                disabled={f !== "1"}
+                onClick={() => setBayOpen(true)}
+                aria-label={f === "1" ? "Open The Bay interactive 3D model" : floorLabel(f) + " — model not available yet"}
+                title={f === "1" ? "Explore in 3D" : "3D model not available yet"}
+                className="px-3 py-3 rounded-2xl bg-gray-50 border border-gray-100 text-center font-bold text-sm text-primary enabled:hover:bg-sky/10 enabled:hover:border-sky disabled:cursor-default"
               >
                 {floorLabel(f)}
-              </div>
+              </button>
             ))}
           </div>
         </div>
@@ -352,3 +361,5 @@ export default function MapPage() {
     </div>
   );
 }
+
+
