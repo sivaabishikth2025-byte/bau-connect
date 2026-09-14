@@ -3,7 +3,7 @@
 import { createElement, useEffect, useRef, useState } from "react";
 
 export default function FloorModelViewer({ floor, onClose }: { floor: string; onClose: () => void }) {
-  const label = floor === "1" ? "The Bay · 1st floor" : "2nd floor";
+  const label = floor === "1" ? "The Bay · 1st floor" : floor === "2" ? "2nd floor" : "3rd floor";
   const dialog = useRef<HTMLDialogElement>(null);
   const viewer = useRef<HTMLElement>(null);
   const [ready, setReady] = useState(false);
@@ -80,4 +80,5 @@ export default function FloorModelViewer({ floor, onClose }: { floor: string; on
     </dialog>
   );
 }
+
 

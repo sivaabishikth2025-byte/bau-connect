@@ -299,10 +299,10 @@ function MapContent() {
               <button
                 key={f}
                 type="button"
-                disabled={f !== "1" && f !== "2"}
+                disabled={f !== "1" && f !== "2" && f !== "3"}
                 onClick={() => setOpenFloor(f)}
-                aria-label={(f === "1" || f === "2") ? "Open " + floorLabel(f) + " interactive 3D model" : floorLabel(f) + " — model not available yet"}
-                title={(f === "1" || f === "2") ? "Explore in 3D" : "3D model not available yet"}
+                aria-label={(f === "1" || f === "2" || f === "3") ? "Open " + floorLabel(f) + " interactive 3D model" : floorLabel(f) + " — model not available yet"}
+                title={(f === "1" || f === "2" || f === "3") ? "Explore in 3D" : "3D model not available yet"}
                 className="px-3 py-3 rounded-2xl bg-gray-50 border border-gray-100 text-center font-bold text-sm text-primary enabled:hover:bg-sky/10 enabled:hover:border-sky disabled:cursor-default"
               >
                 {floorLabel(f)}
@@ -361,6 +361,7 @@ export default function MapPage() {
     </div>
   );
 }
+
 
 
 
