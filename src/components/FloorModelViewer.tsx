@@ -1,9 +1,10 @@
 "use client";
 
 import { createElement, useEffect, useRef, useState } from "react";
+import { floorLabel } from "@/lib/constants";
 
 export default function FloorModelViewer({ floor, onClose }: { floor: string; onClose: () => void }) {
-  const label = floor === "1" ? "The Bay · 1st floor" : floor === "2" ? "2nd floor" : "3rd floor";
+  const label = floorLabel(floor);
   const dialog = useRef<HTMLDialogElement>(null);
   const viewer = useRef<HTMLElement>(null);
   const [ready, setReady] = useState(false);
@@ -64,13 +65,21 @@ export default function FloorModelViewer({ floor, onClose }: { floor: string; on
             "touch-action": "none",
             style: { width: "100%", height: "100%" },
           })}
-          {!loaded && !error && <p role="status" className="absolute inset-0 flex items-center justify-center pointer-events-none">Loading {label}…</p>}
-          {error && <div role="alert" className="absolute inset-0 flex flex-col items-center justify-center gap-3 p-6 text-center">
-            <p>The model could not load. Please close the viewer and try again.</p>
-          </div>}
+          {!loaded && !error && (
+            <p role="status" className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              Loading {label}…
+            </p>
+          )}
+          {error && (
+            <div role="alert" className="absolute inset-0 flex flex-col items-center justify-center gap-3 p-6 text-center">
+              <p>The model could not load. Please close the viewer and try again.</p>
+            </div>
+          )}
         </div>
         <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-          <p className="text-sm text-gray-600">Drag to rotate · Scroll or pinch to zoom · Right-drag or use two fingers to pan</p>
+          <p className="text-sm text-gray-600">
+            Drag to rotate · Scroll or pinch to zoom · Right-drag or use two fingers to pan
+          </p>
           <button disabled={!loaded || error} onClick={() => setRotating(v => !v)}
             className="rounded-xl bg-primary text-white px-4 py-2 disabled:opacity-50">
             {rotating ? "Pause rotation" : "Resume rotation"}
@@ -80,5 +89,3 @@ export default function FloorModelViewer({ floor, onClose }: { floor: string; on
     </dialog>
   );
 }
-
-

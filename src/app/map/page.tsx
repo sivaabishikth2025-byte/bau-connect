@@ -8,7 +8,7 @@ import dynamic from "next/dynamic";
 import { AppStarfield, appPageBg } from "@/components/AppShell";
 import {
   BAU_CAMPUS, BUILDING_FLOORS, CAMPUS_LOCATIONS, TRANSIT_SPOTS, EXPLORE_DC,
-  floorLabel, volunteerCategoryMeta
+  floorLabel, hasFloorModel, volunteerCategoryMeta
 } from "@/lib/constants";
 import {
   campusMapQuery,
@@ -295,19 +295,22 @@ function MapContent() {
       <div className="grid md:grid-cols-2 gap-4">
         <div className="bg-white rounded-3xl shadow-lg p-5">
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-            {BUILDING_FLOORS.map(f => (
-              <button
-                key={f}
-                type="button"
-                disabled={f !== "1" && f !== "2" && f !== "3"}
-                onClick={() => setOpenFloor(f)}
-                aria-label={(f === "1" || f === "2" || f === "3") ? "Open " + floorLabel(f) + " interactive 3D model" : floorLabel(f) + " — model not available yet"}
-                title={(f === "1" || f === "2" || f === "3") ? "Explore in 3D" : "3D model not available yet"}
-                className="px-3 py-3 rounded-2xl bg-gray-50 border border-gray-100 text-center font-bold text-sm text-primary enabled:hover:bg-sky/10 enabled:hover:border-sky disabled:cursor-default"
-              >
-                {floorLabel(f)}
-              </button>
-            ))}
+            {BUILDING_FLOORS.map(f => {
+              const available = hasFloorModel(f);
+              return (
+                <button
+                  key={f}
+                  type="button"
+                  disabled={!available}
+                  onClick={() => setOpenFloor(f)}
+                  aria-label={available ? "Open " + floorLabel(f) + " interactive 3D model" : floorLabel(f) + " — model not available yet"}
+                  title={available ? "Explore in 3D" : "3D model not available yet"}
+                  className="px-3 py-3 rounded-2xl bg-gray-50 border border-gray-100 text-center font-bold text-sm text-primary enabled:hover:bg-sky/10 enabled:hover:border-sky disabled:cursor-default disabled:opacity-50"
+                >
+                  {floorLabel(f)}
+                </button>
+              );
+            })}
           </div>
         </div>
 
