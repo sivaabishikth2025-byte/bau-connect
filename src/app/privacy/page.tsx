@@ -153,7 +153,10 @@ export default function PrivacyPage() {
                 <a className="text-sky font-semibold" href="mailto:techconnect@bau.edu">
                   techconnect@bau.edu
                 </a>{" "}
-                from your BAU email
+                from your BAU email, or use{" "}
+                <Link href="/delete-account" className="text-sky font-semibold">
+                  baustudentconnect.com/delete-account
+                </Link>
               </li>
             </ul>
             <p className="mt-3">
