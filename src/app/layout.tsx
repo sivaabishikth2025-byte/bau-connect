@@ -15,6 +15,7 @@ export const metadata: Metadata = {
     statusBarStyle: "black-translucent",
     title: "BAU Connect",
   },
+  manifest: "/manifest.webmanifest",
 };
 
 export const viewport: Viewport = {

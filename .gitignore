@@ -4,3 +4,12 @@ node_modules
 .env.local
 .env
 *.tsbuildinfo
+android/.gradle
+android/app/build
+android/build
+android/capacitor-cordova-android-plugins/build
+android/local.properties
+android/.idea
+*.jks
+*.keystore
+key.properties
