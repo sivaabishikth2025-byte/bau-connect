@@ -250,7 +250,7 @@ export default function AdminPage() {
   ];
 
   return (
-    <div className="min-h-screen pb-24 md:pb-8 md:pt-20 relative overflow-hidden" style={{ background: appPageBg }}>
+    <div className="min-h-screen app-bottom-pad md:pb-8 md:pt-20 relative overflow-x-hidden" style={{ background: appPageBg }}>
       <AppStarfield />
       <Navbar />
       <div className="max-w-4xl mx-auto px-4 pt-8 relative z-10">

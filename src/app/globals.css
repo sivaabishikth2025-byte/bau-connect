@@ -4,9 +4,16 @@
 
 * { box-sizing: border-box; }
 
+html {
+  -webkit-text-size-adjust: 100%;
+  overflow-x: hidden;
+}
+
 body {
   background: #F4F7FF;
   font-family: "Nunito", sans-serif;
+  overflow-x: hidden;
+  overscroll-behavior-y: none;
 }
 
 html,
@@ -15,4 +22,30 @@ input,
 textarea,
 select {
   font-family: "Nunito", sans-serif;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Extra clearance above fixed mobile bottom nav + home indicator */
+.app-bottom-pad {
+  padding-bottom: calc(5.5rem + env(safe-area-inset-bottom));
+}
+@media (min-width: 768px) {
+  .app-bottom-pad {
+    padding-bottom: 0;
+  }
+}
+
+@media (max-width: 767px) {
+  .bau-logo {
+    height: var(--logo-mh) !important;
+    max-height: var(--logo-mh) !important;
+    max-width: min(100%, var(--logo-mmw)) !important;
+  }
 }

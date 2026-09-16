@@ -110,7 +110,7 @@ export default function Profile() {
   const gallery = profile.gallery || [];
 
   return (
-    <div className="min-h-screen pb-20 md:pb-0 md:pt-20" style={{background:"#BBD3EE"}}>
+    <div className="min-h-screen app-bottom-pad md:pb-0 md:pt-20" style={{background:"#BBD3EE"}}>
       <Navbar />
       <div className="max-w-lg mx-auto px-4 pt-6 space-y-4">
 
@@ -136,18 +136,18 @@ export default function Profile() {
         <div className="bg-white rounded-3xl p-6 shadow-sm">
           <p className="text-xl font-black text-primary mb-1">Profile Picture</p>
           <p className="text-sm text-gray-400 mb-6">This is the main photo shown on your card in People.</p>
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-4 sm:gap-6">
             <div className="relative shrink-0">
               <img src={profile.photoURL} alt={profile.name}
-                className="w-32 h-32 rounded-2xl object-cover shadow" />
+                className="w-24 h-24 sm:w-32 sm:h-32 rounded-2xl object-cover shadow" />
               {saving && (
                 <div className="absolute inset-0 bg-black/40 rounded-2xl flex items-center justify-center">
                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                 </div>
               )}
             </div>
-            <div className="space-y-2">
-              <label className="flex items-center gap-2 bg-primary text-white text-sm font-bold px-6 py-3.5 rounded-2xl cursor-pointer hover:bg-primary/90 transition">
+            <div className="space-y-2 min-w-0">
+              <label className="inline-flex items-center gap-2 bg-primary text-white text-sm font-bold px-4 sm:px-6 py-3 sm:py-3.5 rounded-2xl cursor-pointer hover:bg-primary/90 transition">
                 <Camera size={15} /> Change Photo
                 <input type="file" accept="image/*" onChange={handleProfilePhoto} className="hidden" />
               </label>

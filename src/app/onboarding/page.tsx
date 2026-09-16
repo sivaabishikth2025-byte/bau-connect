@@ -84,10 +84,10 @@ export default function Onboarding() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/10 to-secondary/10 py-12 px-4">
-      <div className="bg-white rounded-3xl shadow-xl p-8 w-full max-w-lg mx-auto">
-        <h1 className="text-3xl font-bold text-gray-900 mb-1">Join {APP_NAME}</h1>
-        <p className="text-gray-500 mb-8">Set up your campus profile</p>
+    <div className="min-h-screen bg-gradient-to-br from-primary/10 to-secondary/10 py-8 sm:py-12 px-4 overflow-x-hidden">
+      <div className="bg-white rounded-3xl shadow-xl p-5 sm:p-8 w-full max-w-lg mx-auto">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1">Join {APP_NAME}</h1>
+        <p className="text-gray-500 mb-6 sm:mb-8">Set up your campus profile</p>
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>

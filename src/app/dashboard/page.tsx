@@ -110,13 +110,13 @@ export default function Dashboard() {
   const displayPhotos = displayUser?.photos?.length ? displayUser.photos : displayUser ? [displayUser.photoURL] : [];
 
   return (
-    <div className="min-h-screen pb-24 md:pb-0 md:pt-20 relative overflow-hidden" style={{ background: appPageBg }}>
+    <div className="min-h-screen app-bottom-pad md:pb-0 md:pt-20 relative overflow-x-hidden" style={{ background: appPageBg }}>
       <AppStarfield />
       <Navbar />
-      <div className="max-w-lg mx-auto px-4 pt-8 relative z-10">
+      <div className="max-w-lg mx-auto px-4 pt-6 sm:pt-8 relative z-10">
 
         <div className="text-center mb-4">
-          <h1 className="text-3xl font-black text-white">People</h1>
+          <h1 className="text-2xl sm:text-3xl font-black text-white">People</h1>
           <p className="text-white/50 text-sm mt-1">Find classmates and send a follow request</p>
         </div>
 
@@ -242,7 +242,7 @@ export default function Dashboard() {
                   src={displayPhotos[photoIndex] || displayUser.photoURL}
                   alt={displayUser.name}
                   className="w-full object-cover"
-                  style={{ height: "420px" }}
+                  style={{ height: "min(52vh, 420px)" }}
                 />
                 {displayPhotos.length > 1 && (
                   <div className="absolute top-3 left-0 right-0 flex justify-center gap-1.5 px-4">

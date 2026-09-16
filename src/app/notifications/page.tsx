@@ -46,14 +46,14 @@ export default function NotificationsPage() {
   };
 
   return (
-    <div className="min-h-screen pb-24 md:pb-0 md:pt-20 relative overflow-hidden" style={{ background: appPageBg }}>
+    <div className="min-h-screen app-bottom-pad md:pb-0 md:pt-20 relative overflow-x-hidden" style={{ background: appPageBg }}>
       <AppStarfield />
       <Navbar />
-      <div className="max-w-2xl mx-auto px-4 pt-8 relative z-10">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-3xl font-black text-white flex items-center gap-2">
-              <Bell className="text-secondary" size={26} /> Your alerts
+      <div className="max-w-2xl mx-auto px-4 pt-6 sm:pt-8 relative z-10">
+        <div className="flex items-center justify-between gap-3 mb-6">
+          <div className="min-w-0">
+            <h1 className="text-2xl sm:text-3xl font-black text-white flex items-center gap-2">
+              <Bell className="text-secondary shrink-0" size={26} /> Your alerts
             </h1>
             <p className="text-white/50 text-sm mt-1">Only you see this inbox</p>
           </div>

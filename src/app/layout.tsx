@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import NotificationsProvider from "@/components/NotificationsProvider";
@@ -10,6 +10,18 @@ export const metadata: Metadata = {
     icon: [{ url: "/favicon.png", type: "image/png" }],
     apple: [{ url: "/apple-icon.png", type: "image/png" }],
   },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "BAU Connect",
+  },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: "#1C2D5A",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

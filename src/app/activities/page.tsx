@@ -151,20 +151,20 @@ export default function ActivitiesPage() {
     filter === "all" ? activities : activities.filter(a => a.type === filter);
 
   return (
-    <div className="min-h-screen pb-24 md:pb-0 md:pt-20 relative overflow-hidden" style={{ background: appPageBg }}>
+    <div className="min-h-screen app-bottom-pad md:pb-0 md:pt-20 relative overflow-x-hidden" style={{ background: appPageBg }}>
       <AppStarfield />
       <Navbar />
-      <div className="max-w-2xl mx-auto px-4 pt-8 relative z-10">
-        <div className="flex items-start justify-between gap-4 mb-6">
-          <div>
-            <h1 className="text-3xl font-black text-white">Campus feed</h1>
+      <div className="max-w-2xl mx-auto px-4 pt-6 sm:pt-8 relative z-10">
+        <div className="flex items-start justify-between gap-3 mb-6">
+          <div className="min-w-0">
+            <h1 className="text-2xl sm:text-3xl font-black text-white">Campus feed</h1>
             <p className="text-white/50 text-sm mt-1">
               Post carpools, study sessions, hangouts, and plans around BAU &amp; DC
             </p>
           </div>
           <button
             onClick={() => setShowCreate(true)}
-            className="shrink-0 flex items-center gap-2 bg-secondary text-primary font-bold text-sm px-4 py-2.5 rounded-2xl hover:opacity-90 transition"
+            className="shrink-0 flex items-center gap-2 bg-secondary text-primary font-bold text-sm px-3 sm:px-4 py-2.5 rounded-2xl hover:opacity-90 transition"
           >
             <Plus size={18} /> Post
           </button>

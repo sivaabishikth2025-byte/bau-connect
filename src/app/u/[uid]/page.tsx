@@ -76,7 +76,7 @@ export default function FullProfile() {
   const photos = profile.photos?.length ? profile.photos : [profile.photoURL];
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-32">
+    <div className="min-h-screen bg-gray-50 app-bottom-pad">
       <div className="fixed top-4 left-4 z-20">
         <button onClick={() => router.back()}
           className="bg-white/90 backdrop-blur rounded-full p-2.5 shadow-md hover:bg-white transition">
@@ -84,7 +84,7 @@ export default function FullProfile() {
         </button>
       </div>
 
-      <div className="relative w-full" style={{ height: "480px" }}>
+      <div className="relative w-full" style={{ height: "min(55vh, 480px)" }}>
         <img src={photos[photoIndex]} alt={profile.name} className="w-full h-full object-cover" />
         {photos.length > 1 && (
           <div className="absolute top-4 left-0 right-0 flex justify-center gap-1.5 px-4">

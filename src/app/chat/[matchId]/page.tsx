@@ -100,28 +100,26 @@ export default function Chat() {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-gray-50">
+    <div className="flex flex-col h-[100dvh] bg-gray-50">
       {/* Header */}
-      <div className="bg-white border-b border-gray-100 px-4 py-4 flex items-center gap-3 shadow-sm">
-        <button onClick={() => router.back()} className="text-primary hover:opacity-70 transition">
+      <div className="bg-white border-b border-gray-100 px-4 py-3 sm:py-4 flex items-center gap-3 shadow-sm pt-[max(0.75rem,env(safe-area-inset-top))]">
+        <button onClick={() => router.back()} className="text-primary hover:opacity-70 transition shrink-0 p-1 -ml-1">
           <ArrowLeft size={22} />
         </button>
         {otherUser && (
-          <>
-            <Link href={`/u/${otherUser.uid}`} className="flex items-center gap-3 flex-1 min-w-0 hover:opacity-80 transition">
-              <img src={otherUser.photos?.[0] || otherUser.photoURL} alt={otherUser.name}
-                className="w-10 h-10 rounded-full object-cover shrink-0" />
-              <div className="min-w-0">
-                <p className="font-bold text-gray-900 leading-tight truncate">{otherUser.name}</p>
-                <p className="text-gray-400 text-xs truncate">{otherUser.major} · tap to view profile</p>
-              </div>
-            </Link>
-          </>
+          <Link href={`/u/${otherUser.uid}`} className="flex items-center gap-3 flex-1 min-w-0 hover:opacity-80 transition">
+            <img src={otherUser.photos?.[0] || otherUser.photoURL} alt={otherUser.name}
+              className="w-10 h-10 rounded-full object-cover shrink-0" />
+            <div className="min-w-0">
+              <p className="font-bold text-gray-900 leading-tight truncate">{otherUser.name}</p>
+              <p className="text-gray-400 text-xs truncate">{otherUser.major} · tap to view profile</p>
+            </div>
+          </Link>
         )}
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
+      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3 overscroll-contain">
         {messages.length === 0 && (
           <p className="text-center text-gray-400 text-sm pt-8">
             Say hi to {otherUser?.name} 👋
@@ -133,8 +131,8 @@ export default function Chat() {
           const isSeen = m.seenBy?.includes(otherUser?.uid || "");
           return (
             <div key={m.id} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
-              <div className="max-w-xs">
-                <div className={`px-4 py-3 rounded-2xl text-sm ${
+              <div className="max-w-[85%] sm:max-w-xs">
+                <div className={`px-4 py-3 rounded-2xl text-sm break-words ${
                   isMe ? "bg-primary text-white rounded-tr-sm" : "bg-white text-gray-900 rounded-tl-sm shadow-sm"
                 }`}>
                   {m.text}
@@ -145,7 +143,6 @@ export default function Chat() {
                       {format(m.createdAt.toDate?.() || new Date(), "h:mm a")}
                     </p>
                   )}
-                  {/* Read receipt — only show on last sent message */}
                   {isMe && isLast && (
                     isSeen
                       ? <CheckCheck size={14} className="text-primary" />
@@ -160,12 +157,21 @@ export default function Chat() {
       </div>
 
       {/* Input */}
-      <form onSubmit={send} className="bg-white border-t border-gray-100 px-4 py-3 flex items-center gap-3">
-        <input value={text} onChange={e => setText(e.target.value)}
+      <form
+        onSubmit={send}
+        className="bg-white border-t border-gray-100 px-4 py-3 flex items-center gap-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
+      >
+        <input
+          value={text}
+          onChange={e => setText(e.target.value)}
           placeholder="Type a message..."
-          className="flex-1 bg-gray-100 rounded-full px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
-        <button type="submit"
-          className="w-11 h-11 bg-primary rounded-full flex items-center justify-center hover:bg-primary/90 transition flex-shrink-0">
+          enterKeyHint="send"
+          className="flex-1 bg-gray-100 rounded-full px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+        />
+        <button
+          type="submit"
+          className="w-11 h-11 bg-primary rounded-full flex items-center justify-center hover:bg-primary/90 transition flex-shrink-0"
+        >
           <Send size={16} className="text-white" />
         </button>
       </form>

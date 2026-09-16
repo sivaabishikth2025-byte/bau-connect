@@ -27,7 +27,7 @@ import Link from "next/link";
 const InteractiveGoogleMap = dynamic(() => import("@/components/InteractiveGoogleMap"), {
   ssr: false,
   loading: () => (
-    <div className="rounded-[28px] border border-white/20 bg-white/10 animate-pulse" style={{ height: "min(72vh, 720px)" }} />
+    <div className="rounded-[28px] border border-white/20 bg-white/10 animate-pulse" style={{ height: "min(52vh, 520px)" }} />
   ),
 });
 
@@ -101,13 +101,13 @@ function MapContent() {
   const openInGoogleUrl = googleMapsSearchUrl(mapQuery);
 
   return (
-    <div className="max-w-6xl mx-auto px-4 pt-8 relative z-10 pb-24 md:pb-8">
+    <div className="max-w-6xl mx-auto px-4 pt-6 sm:pt-8 relative z-10 pb-4 md:pb-8">
       {openFloor && <FloorModelViewer key={openFloor} floor={openFloor} onClose={() => setOpenFloor(null)} />}
       <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-5">
         <div>
-          <h1 className="text-3xl font-black text-white">BAU Connect Map</h1>
+          <h1 className="text-2xl sm:text-3xl font-black text-white">BAU Connect Map</h1>
           <p className="text-white/50 text-sm mt-1">
-            Google Maps — click any place on the map or pick from the lists. The side panel updates instantly.
+            Tap a place on the map or pick from the lists. The panel updates instantly.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -349,7 +349,7 @@ function MapContent() {
 
 export default function MapPage() {
   return (
-    <div className="min-h-screen md:pt-20 relative overflow-hidden" style={{ background: appPageBg }}>
+    <div className="min-h-screen app-bottom-pad md:pb-0 md:pt-20 relative overflow-x-hidden" style={{ background: appPageBg }}>
       <AppStarfield />
       <Navbar />
       <Suspense

@@ -216,16 +216,33 @@ export default function Landing() {
         .sc{width:32px;height:32px;border-radius:50%;border:1px solid rgba(187,211,238,.2);display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--ice);opacity:.5;transition:all .3s;text-decoration:none;}
         .sc:hover{opacity:1;border-color:var(--sky);color:var(--sky);}
         .orb{position:absolute;border-radius:50%;filter:blur(80px);animation:glow 4s ease-in-out infinite;}
+        @media (max-width:767px){
+          .bau nav{padding:12px 16px !important;gap:12px !important;min-height:64px !important;grid-template-columns:1fr auto !important;}
+          .bau nav ul{display:none !important;}
+          .bau .bg{padding:10px 18px;font-size:10px;}
+          .bau .bc,.bau .bgh{padding:14px 22px;font-size:11px;letter-spacing:.12em;}
+          .bau .a4{flex-direction:column;gap:12px !important;width:100%;padding:0 20px;box-sizing:border-box;}
+          .bau .a4 a,.bau .a4 button{width:100%;}
+          .bau .a4 button{width:100%;}
+          .fc{padding:32px 24px;}
+          .ft{font-size:22px;}
+          .tc{padding:32px 24px;}
+          .tc::before{font-size:80px;left:16px;}
+          .how-line,.stat-div{display:none !important;}
+          .phase-dots span{display:none;}
+          .cta-form{flex-direction:column !important;}
+          .cta-form input,.cta-form a,.cta-form button{width:100% !important;max-width:none !important;}
+        }
       `}</style>
 
       <div className="bau">
         {/* NAV */}
-        <nav style={{position:"fixed",top:0,left:0,right:0,zIndex:100,display:"grid",gridTemplateColumns:"auto 1fr auto",alignItems:"center",gap:32,padding:"20px 56px",minHeight:88}}>
+        <nav className="landing-nav" style={{position:"fixed",top:0,left:0,right:0,zIndex:100,display:"grid",gridTemplateColumns:"auto 1fr auto",alignItems:"center",gap:32,padding:"20px 56px",minHeight:88,paddingTop:"max(20px, env(safe-area-inset-top))"}}>
           <div style={{position:"absolute",inset:0,background:"linear-gradient(to bottom,rgba(28,45,90,.92),transparent)",pointerEvents:"none"}}/>
           <div style={{display:"flex",alignItems:"center",position:"relative",zIndex:1}}>
             <BauLogo size="landing" tone="dark" />
           </div>
-          <ul style={{display:"flex",gap:40,listStyle:"none",justifyContent:"center",alignItems:"center",position:"relative",zIndex:1,margin:0,padding:0}}>
+          <ul className="landing-nav-links" style={{display:"flex",gap:40,listStyle:"none",justifyContent:"center",alignItems:"center",position:"relative",zIndex:1,margin:0,padding:0}}>
             <li><a href="#how" className="nl">How It Works</a></li>
             <li><a href="#discover" className="nl">Explore</a></li>
             <li><a href="#stories" className="nl">Stories</a></li>
@@ -242,12 +259,12 @@ export default function Landing() {
           {/* Content renders FIRST */}
           <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",zIndex:999,pointerEvents:"none"}}>
             <div style={{textAlign:"center",pointerEvents:"all"}}>
-              <p className="a1" style={{fontSize:11,letterSpacing:".5em",textTransform:"uppercase",color:"var(--sky)",marginBottom:24}}>Bay Atlantic University</p>
-              <h1 className="serif a2" style={{fontSize:"clamp(56px,9vw,112px)",fontWeight:800,lineHeight:.9,letterSpacing:"-.02em",marginBottom:12,color:"#fff",textShadow:"0 2px 20px rgba(0,0,0,.8)"}}>
+              <p className="a1" style={{fontSize:11,letterSpacing:".5em",textTransform:"uppercase",color:"var(--sky)",marginBottom:24,padding:"0 16px"}}>Bay Atlantic University</p>
+              <h1 className="serif a2" style={{fontSize:"clamp(48px,12vw,112px)",fontWeight:800,lineHeight:.9,letterSpacing:"-.02em",marginBottom:12,color:"#fff",textShadow:"0 2px 20px rgba(0,0,0,.8)"}}>
                 BAU<br/><span style={{color:"var(--gold)"}}>Connect</span>
               </h1>
-              <p className="a3" style={{fontSize:13,letterSpacing:".2em",textTransform:"uppercase",color:"var(--ice)",marginBottom:48}}>Carpools, Study, Hangouts, Explore DC</p>
-              <div className="a4" style={{display:"inline-flex",gap:16}}>
+              <p className="a3" style={{fontSize:"clamp(11px,3vw,13px)",letterSpacing:".15em",textTransform:"uppercase",color:"var(--ice)",marginBottom:40,padding:"0 20px"}}>Carpools, Study, Hangouts, Explore DC</p>
+              <div className="a4" style={{display:"inline-flex",gap:16,flexWrap:"wrap",justifyContent:"center"}}>
                 <Link href="/signup"><button className="bc">Join Campus</button></Link>
                 <a href="#how"><button className="bgh">See How It Works</button></a>
               </div>
@@ -321,7 +338,7 @@ export default function Landing() {
             </div>
 
             {/* Phase indicators */}
-            <div style={{position:"absolute",right:40,top:"50%",transform:"translateY(-50%)",display:"flex",flexDirection:"column",gap:16,zIndex:20}}>
+            <div className="phase-dots" style={{position:"absolute",right:16,top:"50%",transform:"translateY(-50%)",display:"flex",flexDirection:"column",gap:16,zIndex:20}}>
               {[{c:"var(--sky)",l:"01"},{c:"var(--gold)",l:"02"},{c:"var(--lime)",l:"03"}].map((ph,i)=>(
                 <div
                   key={i}
@@ -356,16 +373,16 @@ export default function Landing() {
         </section>
 
         {/* FEATURES */}
-        <section style={{background:"#fff",color:"var(--navy)",padding:"120px 56px",position:"relative"}}>
+        <section style={{background:"#fff",color:"var(--navy)",padding:"clamp(64px,10vw,120px) clamp(20px,4vw,56px)",position:"relative"}}>
           <div style={{position:"absolute",top:0,left:0,right:0,height:4,background:"linear-gradient(90deg,var(--coral),var(--gold),var(--lime),var(--sky))"}}/>
-          <div style={{display:"flex",alignItems:"flex-end",justifyContent:"space-between",marginBottom:80,flexWrap:"wrap",gap:40}}>
+          <div style={{display:"flex",alignItems:"flex-end",justifyContent:"space-between",marginBottom:48,flexWrap:"wrap",gap:24}}>
             <div>
               <p style={{fontSize:10,letterSpacing:".4em",textTransform:"uppercase",color:"var(--coral)",marginBottom:12}}>Why BAU Connect</p>
-              <h2 className="serif" style={{fontSize:"clamp(40px,5vw,72px)",fontWeight:300,color:"var(--navy)",lineHeight:1}}>Friends.<br/>Plans. Campus.</h2>
+              <h2 className="serif" style={{fontSize:"clamp(36px,8vw,72px)",fontWeight:300,color:"var(--navy)",lineHeight:1}}>Friends.<br/>Plans. Campus.</h2>
             </div>
             <p style={{maxWidth:340,fontSize:14,lineHeight:1.8,color:"rgba(28,45,90,.65)"}}>Built for Bay Atlantic University. Meet people for rides, study sessions, hangouts, and getting around DC.</p>
           </div>
-          <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:2,background:"rgba(28,45,90,.08)"}}>
+          <div className="feat-grid" style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(260px,1fr))",gap:2,background:"rgba(28,45,90,.08)"}}>
             {[
               {n:"01",icon:<svg viewBox="0 0 48 48" fill="none" style={{width:48,height:48,marginBottom:24}}><circle cx="24" cy="24" r="20" stroke="#F15B47" strokeWidth="1.5"/><path d="M16 24 Q24 12 32 24 Q24 36 16 24Z" fill="#F15B47" opacity=".3"/><circle cx="24" cy="24" r="4" fill="#F15B47"/></svg>,title:"University Verified",body:"Only @stu.bau.edu and @bau.edu emails. Every profile is a real BAU student or staff member."},
               {n:"02",icon:<svg viewBox="0 0 48 48" fill="none" style={{width:48,height:48,marginBottom:24}}><path d="M8 36 L24 12 L40 36" stroke="#DBA631" strokeWidth="1.5"/><path d="M14 28 L34 28" stroke="#DBA631" strokeWidth="1.5"/><circle cx="24" cy="12" r="3" fill="#DBA631"/></svg>,title:"Campus Connections",body:"Connect with classmates for friendship, collaboration, and everyday campus plans."},
@@ -385,35 +402,35 @@ export default function Landing() {
         </section>
 
         {/* STATS */}
-        <div style={{background:"var(--gold)",padding:"64px 56px",display:"flex",alignItems:"center",justifyContent:"space-around",gap:40,flexWrap:"wrap"}}>
+        <div style={{background:"var(--gold)",padding:"48px clamp(20px,4vw,56px)",display:"flex",alignItems:"center",justifyContent:"space-around",gap:24,flexWrap:"wrap"}}>
           {[{n:"100%",l:"BAU Verified"},{n:"Free",l:"Always"},{n:"Real",l:"Connections"},{n:"4.9★",l:"Rating"}].map((s,i,arr)=>(
-            <div key={s.l} style={{display:"flex",alignItems:"center",gap:40}}>
+            <div key={s.l} style={{display:"flex",alignItems:"center",gap:24}}>
               <div style={{textAlign:"center"}}>
-                <div className="serif" style={{fontSize:72,fontWeight:300,color:"var(--navy)",lineHeight:1}}>{s.n}</div>
+                <div className="serif" style={{fontSize:"clamp(40px,10vw,72px)",fontWeight:300,color:"var(--navy)",lineHeight:1}}>{s.n}</div>
                 <div style={{fontSize:10,letterSpacing:".3em",textTransform:"uppercase",color:"rgba(28,45,90,.65)",marginTop:8}}>{s.l}</div>
               </div>
-              {i<arr.length-1&&<div style={{width:1,height:80,background:"rgba(28,45,90,.2)"}}/>}
+              {i<arr.length-1&&<div className="stat-div" style={{width:1,height:80,background:"rgba(28,45,90,.2)"}}/>}
             </div>
           ))}
         </div>
 
         {/* HOW IT WORKS */}
-        <section id="how" style={{background:"var(--navy)",padding:"120px 56px"}}>
-          <div style={{textAlign:"center",marginBottom:96}}>
+        <section id="how" style={{background:"var(--navy)",padding:"clamp(64px,10vw,120px) clamp(20px,4vw,56px)"}}>
+          <div style={{textAlign:"center",marginBottom:48}}>
             <p style={{fontSize:10,letterSpacing:".4em",textTransform:"uppercase",color:"var(--lime)",marginBottom:16}}>The Process</p>
-            <h2 className="serif" style={{fontSize:"clamp(40px,5vw,72px)",fontWeight:300,color:"#fff"}}>Four steps to<br/>campus life.</h2>
+            <h2 className="serif" style={{fontSize:"clamp(36px,8vw,72px)",fontWeight:300,color:"#fff"}}>Four steps to<br/>campus life.</h2>
           </div>
-          <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",position:"relative"}}>
-            <div style={{position:"absolute",top:32,left:"12.5%",right:"12.5%",height:1,background:"linear-gradient(90deg,var(--coral),var(--gold),var(--lime),var(--sky))"}}/>
+          <div className="how-grid" style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))",gap:32,position:"relative"}}>
+            <div className="how-line" style={{position:"absolute",top:32,left:"12.5%",right:"12.5%",height:1,background:"linear-gradient(90deg,var(--coral),var(--gold),var(--lime),var(--sky))"}}/>
             {[
               {bg:"var(--coral)",c:"#fff",n:"1",title:"Sign Up with BAU Email",body:"Use your @stu.bau.edu or @bau.edu email. Verify it and you're in."},
               {bg:"var(--gold)",c:"var(--navy)",n:"2",title:"Say What You're Open To",body:"Carpools, study groups, explore DC, sports. Let people know how you connect."},
               {bg:"var(--lime)",c:"var(--navy)",n:"3",title:"Meet & Post Plans",body:"Browse people, post rides or hangouts, and use the campus map."},
               {bg:"var(--sky)",c:"#fff",n:"4",title:"Connect & Chat",body:"Accept requests, message classmates, and make plans in real time."},
             ].map(s=>(
-              <div key={s.n} style={{padding:"0 32px",textAlign:"center"}}>
-                <div style={{width:64,height:64,borderRadius:"50%",background:s.bg,color:s.c,display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 32px",fontSize:18,fontFamily:"'Nunito',sans-serif",fontWeight:300,position:"relative",zIndex:1}}>{s.n}</div>
-                <h3 className="serif" style={{fontSize:24,fontWeight:400,color:"#fff",marginBottom:12}}>{s.title}</h3>
+              <div key={s.n} style={{padding:"0 8px",textAlign:"center"}}>
+                <div style={{width:64,height:64,borderRadius:"50%",background:s.bg,color:s.c,display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 24px",fontSize:18,fontFamily:"'Nunito',sans-serif",fontWeight:300,position:"relative",zIndex:1}}>{s.n}</div>
+                <h3 className="serif" style={{fontSize:20,fontWeight:400,color:"#fff",marginBottom:12}}>{s.title}</h3>
                 <p style={{fontSize:12,lineHeight:1.9,color:"var(--ice)",opacity:.7}}>{s.body}</p>
               </div>
             ))}
@@ -421,12 +438,12 @@ export default function Landing() {
         </section>
 
         {/* TESTIMONIALS */}
-        <section id="stories" style={{background:"var(--ice)",padding:"120px 56px"}}>
-          <div style={{textAlign:"center",marginBottom:72}}>
+        <section id="stories" style={{background:"var(--ice)",padding:"clamp(64px,10vw,120px) clamp(20px,4vw,56px)"}}>
+          <div style={{textAlign:"center",marginBottom:48}}>
             <p style={{fontSize:10,letterSpacing:".4em",textTransform:"uppercase",color:"var(--navy)",opacity:.5,marginBottom:16}}>Real Stories</p>
-            <h2 className="serif" style={{fontSize:"clamp(36px,4vw,60px)",fontWeight:300,color:"var(--navy)"}}>They found<br/>their people.</h2>
+            <h2 className="serif" style={{fontSize:"clamp(32px,7vw,60px)",fontWeight:300,color:"var(--navy)"}}>They found<br/>their people.</h2>
           </div>
-          <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:24}}>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(260px,1fr))",gap:24}}>
             {[
               {text:"I posted a ride to Metro after my late class and two people from my program joined. So much easier than going alone.",author:"Priya M.",loc:"Computer Science, BAU",accent:"var(--coral)"},
               {text:"Everyone is from BAU which makes it comfortable. I found a study group for midterms in under a day.",author:"Marcus L.",loc:"Business Admin, BAU",accent:"var(--gold)"},
@@ -434,7 +451,7 @@ export default function Landing() {
             ].map(t=>(
               <div key={t.author} className="tc">
                 <div style={{position:"absolute",bottom:0,left:0,right:0,height:3,background:t.accent}}/>
-                <p className="serif" style={{fontSize:20,fontStyle:"italic",fontWeight:300,color:"var(--navy)",lineHeight:1.6,marginBottom:32}}>{t.text}</p>
+                <p className="serif" style={{fontSize:18,fontStyle:"italic",fontWeight:300,color:"var(--navy)",lineHeight:1.6,marginBottom:32}}>{t.text}</p>
                 <div style={{fontSize:10,letterSpacing:".25em",textTransform:"uppercase",color:"rgba(28,45,90,.5)"}}>
                   <strong style={{display:"block",color:"var(--navy)",fontSize:12,marginBottom:4,letterSpacing:".15em"}}>{t.author}</strong>
                   {t.loc}
@@ -445,28 +462,28 @@ export default function Landing() {
         </section>
 
         {/* CTA */}
-        <section id="join" style={{background:"var(--coral)",padding:"120px 56px",textAlign:"center",position:"relative",overflow:"hidden"}}>
-          <div style={{position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",fontFamily:"'Nunito',sans-serif",fontSize:"clamp(120px,16vw,260px)",fontWeight:300,color:"rgba(255,255,255,.06)",whiteSpace:"nowrap",pointerEvents:"none",letterSpacing:"-.05em"}}>CONNECT</div>
+        <section id="join" style={{background:"var(--coral)",padding:"clamp(64px,10vw,120px) clamp(20px,4vw,56px)",textAlign:"center",position:"relative",overflow:"hidden"}}>
+          <div style={{position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",fontFamily:"'Nunito',sans-serif",fontSize:"clamp(80px,16vw,260px)",fontWeight:300,color:"rgba(255,255,255,.06)",whiteSpace:"nowrap",pointerEvents:"none",letterSpacing:"-.05em"}}>CONNECT</div>
           <p style={{fontSize:10,letterSpacing:".4em",textTransform:"uppercase",color:"rgba(255,255,255,.7)",marginBottom:24,position:"relative"}}>Begin Today</p>
-          <h2 className="serif" style={{fontSize:"clamp(48px,7vw,96px)",fontWeight:300,color:"#fff",lineHeight:1,marginBottom:48,position:"relative"}}>Jump in.<br/>Your campus<br/>awaits.</h2>
-          <div style={{display:"flex",justifyContent:"center",maxWidth:520,margin:"0 auto",position:"relative"}}>
-            <input style={{flex:1,padding:"18px 24px",fontFamily:"inherit",fontSize:13,border:"none",background:"rgba(255,255,255,.15)",color:"#fff",outline:"none"}} type="email" placeholder="Your BAU email"/>
+          <h2 className="serif" style={{fontSize:"clamp(40px,10vw,96px)",fontWeight:300,color:"#fff",lineHeight:1,marginBottom:40,position:"relative"}}>Jump in.<br/>Your campus<br/>awaits.</h2>
+          <div className="cta-form" style={{display:"flex",justifyContent:"center",maxWidth:520,margin:"0 auto",position:"relative"}}>
+            <input style={{flex:1,minWidth:0,padding:"18px 24px",fontFamily:"inherit",fontSize:13,border:"none",background:"rgba(255,255,255,.15)",color:"#fff",outline:"none"}} type="email" placeholder="Your BAU email"/>
             <Link href="/signup">
-              <button style={{background:"var(--navy)",color:"#fff",border:"none",padding:"18px 40px",fontFamily:"inherit",fontSize:11,fontWeight:700,letterSpacing:".2em",textTransform:"uppercase",cursor:"pointer"}}>Start Free</button>
+              <button style={{background:"var(--navy)",color:"#fff",border:"none",padding:"18px 40px",fontFamily:"inherit",fontSize:11,fontWeight:700,letterSpacing:".2em",textTransform:"uppercase",cursor:"pointer",whiteSpace:"nowrap",height:"100%"}}>Start Free</button>
             </Link>
           </div>
         </section>
 
         {/* FOOTER */}
-        <footer style={{background:"#0a1628",padding:"64px 56px 40px"}}>
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:64,paddingBottom:48,borderBottom:"1px solid rgba(187,211,238,.1)",flexWrap:"wrap",gap:40}}>
+        <footer style={{background:"#0a1628",padding:"48px clamp(20px,4vw,56px) 40px"}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:48,paddingBottom:40,borderBottom:"1px solid rgba(187,211,238,.1)",flexWrap:"wrap",gap:32}}>
             <div>
               <div style={{display:"flex",alignItems:"center",gap:12}}>
                 <BauLogo size="footer" tone="dark" />
               </div>
               <p className="serif" style={{fontSize:16,fontStyle:"italic",color:"var(--ice)",opacity:.5,marginTop:8}}>Exclusively for Bay Atlantic University</p>
             </div>
-            <div style={{display:"grid",gridTemplateColumns:"repeat(3,120px)",gap:48}}>
+            <div className="footer-cols" style={{display:"grid",gridTemplateColumns:"repeat(3,minmax(0,1fr))",gap:"clamp(16px,4vw,48px)",width:"100%",maxWidth:420}}>
               {[
                 {title:"Product",links:["How It Works","People","Campus Feed","Maps"]},
                 {title:"University",links:["BAU Website","Student Portal","Campus","Events"]},

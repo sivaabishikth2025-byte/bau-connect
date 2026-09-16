@@ -59,7 +59,7 @@ export default function Signup() {
   );
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 relative overflow-hidden" style={{background:"radial-gradient(ellipse at 30% 60%,rgba(40,170,226,.15),transparent 60%),radial-gradient(ellipse at 80% 20%,rgba(219,166,49,.1),transparent 50%),#1C2D5A"}}>
+    <div className="min-h-screen flex items-center justify-center px-4 py-8 relative overflow-x-hidden overflow-y-auto" style={{background:"radial-gradient(ellipse at 30% 60%,rgba(40,170,226,.15),transparent 60%),radial-gradient(ellipse at 80% 20%,rgba(219,166,49,.1),transparent 50%),#1C2D5A"}}>
       <style>{`
         @keyframes star-to-right {
           0% { background-position: -550px -315px; }
@@ -74,15 +74,15 @@ export default function Signup() {
       <span className="star-layer sl2"/>
       <span className="star-layer sl3"/>
 
-      <div className="bg-white rounded-3xl shadow-xl p-8 w-full max-w-sm relative z-10">
+      <div className="bg-white rounded-3xl shadow-xl p-6 sm:p-8 w-full max-w-sm relative z-10 my-auto">
 
         {/* Logo */}
-        <div className="flex justify-center mb-6 w-full">
+        <div className="flex justify-center mb-4 sm:mb-6 w-full">
           <BauLogo size="auth" className="mx-auto" />
         </div>
 
         {/* Title */}
-        <h1 className="text-4xl font-black text-primary text-center mb-1">BAU Connect</h1>
+        <h1 className="text-3xl sm:text-4xl font-black text-primary text-center mb-1">BAU Connect</h1>
         <p className="text-gray-400 text-center mb-6 text-sm">Join with your BAU email</p>
 
         {/* Tab switcher */}
