@@ -39,6 +39,10 @@ export default function Landing() {
     let lastProgress = -1;
 
     function applyParallax() {
+      // Mobile uses a compact static layout — skip scroll-hijack math
+      if (typeof window !== "undefined" && window.matchMedia("(max-width: 767px)").matches) {
+        return;
+      }
       const section = parallaxRef.current;
       const video = videoRef.current;
       const wrap = videoWrapRef.current;
@@ -232,6 +236,26 @@ export default function Landing() {
           .phase-dots span{display:none;}
           .cta-form{flex-direction:column !important;}
           .cta-form input,.cta-form a,.cta-form button{width:100% !important;max-width:none !important;}
+          /* Kill tall scroll-hijack parallax — sticky breaks under overflow-x on iOS */
+          .discover-parallax{height:auto !important;}
+          .discover-sticky{position:relative !important;height:auto !important;overflow:visible !important;}
+          .discover-media{position:relative !important;height:42vh !important;min-height:220px;max-height:360px;}
+          .discover-video-wrap{inset:0 !important;transform:none !important;}
+          .discover-progress,.phase-dots{display:none !important;}
+          .discover-phases{
+            position:relative !important;inset:auto !important;
+            display:flex !important;flex-direction:column !important;gap:14px !important;
+            padding:20px 16px 40px !important;background:#0a1228;
+          }
+          .discover-phases .phase-card{
+            opacity:1 !important;transform:none !important;position:relative !important;
+            left:auto !important;bottom:auto !important;margin:0 !important;
+            width:100% !important;max-width:none !important;text-align:left !important;
+            border-right:none !important;border-bottom:none !important;
+            border-left:4px solid var(--sky);padding:22px 20px !important;
+          }
+          .discover-phases .phase-card.phase-plan{border-left-color:var(--gold);}
+          .discover-phases .phase-card.phase-go{border-left-color:var(--lime);text-align:left !important;}
         }
       `}</style>
 
@@ -286,13 +310,14 @@ export default function Landing() {
           </div>
         </section>
 
-        {/* PARALLAX SECTION · scroll drives dolphin video + story phases */}
-        <section id="discover" ref={parallaxRef} style={{position:"relative",height:"320vh"}}>
-          <div style={{position:"sticky",top:0,left:0,right:0,height:"100vh",width:"100%",overflow:"hidden"}}>
+        {/* PARALLAX SECTION · desktop scroll story; mobile = compact video + cards */}
+        <section id="discover" ref={parallaxRef} className="discover-parallax" style={{position:"relative",height:"320vh"}}>
+          <div className="discover-sticky" style={{position:"sticky",top:0,left:0,right:0,height:"100vh",width:"100%",overflow:"hidden"}}>
 
-            <div style={{position:"absolute",inset:0,overflow:"hidden",background:"radial-gradient(ellipse at 40% 50%,rgba(40,170,226,.22),transparent 55%),#0a1228"}}>
+            <div className="discover-media" style={{position:"absolute",inset:0,overflow:"hidden",background:"radial-gradient(ellipse at 40% 50%,rgba(40,170,226,.22),transparent 55%),#0a1228"}}>
               <div
                 ref={videoWrapRef}
+                className="discover-video-wrap"
                 style={{
                   position:"absolute",
                   inset:"-8%",
@@ -333,7 +358,7 @@ export default function Landing() {
             </div>
 
             {/* Progress indicator */}
-            <div style={{position:"absolute",top:0,left:0,right:0,height:2,background:"rgba(187,211,238,.1)",zIndex:20}}>
+            <div className="discover-progress" style={{position:"absolute",top:0,left:0,right:0,height:2,background:"rgba(187,211,238,.1)",zIndex:20}}>
               <div ref={progressRef} style={{height:"100%",background:"linear-gradient(90deg,var(--coral),var(--gold),var(--lime),var(--sky))",width:"0%",transition:"width .05s linear"}}/>
             </div>
 
@@ -352,20 +377,20 @@ export default function Landing() {
             </div>
 
             {/* Text phases */}
-            <div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",justifyContent:"center",padding:"0 clamp(24px,6vw,80px)",zIndex:10}}>
-              <div ref={phaseLeftRef} className="pt" style={{maxWidth:420,opacity:0,transform:"translate3d(-60px,30px,0)",background:"rgba(10,22,40,.82)",backdropFilter:"blur(24px)",padding:"clamp(28px,4vw,48px) clamp(28px,4vw,56px)",borderLeft:"4px solid var(--sky)",boxShadow:"0 30px 80px rgba(0,0,0,.5)",borderRadius:4,willChange:"transform,opacity"}}>
+            <div className="discover-phases" style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",justifyContent:"center",padding:"0 clamp(24px,6vw,80px)",zIndex:10}}>
+              <div ref={phaseLeftRef} className="pt phase-card" style={{maxWidth:420,opacity:0,transform:"translate3d(-60px,30px,0)",background:"rgba(10,22,40,.82)",backdropFilter:"blur(24px)",padding:"clamp(28px,4vw,48px) clamp(28px,4vw,56px)",borderLeft:"4px solid var(--sky)",boxShadow:"0 30px 80px rgba(0,0,0,.5)",borderRadius:4,willChange:"transform,opacity"}}>
                 <p style={{fontSize:11,letterSpacing:".4em",textTransform:"uppercase",color:"var(--sky)",marginBottom:24,fontWeight:700}}>01 Meet</p>
-                <h2 className="serif" style={{fontSize:"clamp(36px,4.5vw,64px)",fontWeight:300,lineHeight:1.05,marginBottom:24,color:"#fff"}}>Find people<br/>on campus.</h2>
-                <p style={{fontSize:15,lineHeight:1.9,color:"var(--ice)",opacity:.95,letterSpacing:".02em"}}>Browse classmates open to carpools, study groups, coffee chats, sports, and exploring DC together.</p>
+                <h2 className="serif" style={{fontSize:"clamp(28px,4.5vw,64px)",fontWeight:300,lineHeight:1.05,marginBottom:16,color:"#fff"}}>Find people<br/>on campus.</h2>
+                <p style={{fontSize:14,lineHeight:1.8,color:"var(--ice)",opacity:.95,letterSpacing:".02em"}}>Browse classmates open to carpools, study groups, coffee chats, sports, and exploring DC together.</p>
               </div>
-              <div ref={phaseRightRef} className="pt" style={{maxWidth:420,marginLeft:"auto",textAlign:"right",opacity:0,transform:"translate3d(60px,30px,0)",background:"rgba(10,22,40,.82)",backdropFilter:"blur(24px)",padding:"clamp(28px,4vw,48px) clamp(28px,4vw,56px)",borderRight:"4px solid var(--gold)",boxShadow:"0 30px 80px rgba(0,0,0,.5)",borderRadius:4,willChange:"transform,opacity"}}>
+              <div ref={phaseRightRef} className="pt phase-card phase-plan" style={{maxWidth:420,marginLeft:"auto",textAlign:"right",opacity:0,transform:"translate3d(60px,30px,0)",background:"rgba(10,22,40,.82)",backdropFilter:"blur(24px)",padding:"clamp(28px,4vw,48px) clamp(28px,4vw,56px)",borderRight:"4px solid var(--gold)",boxShadow:"0 30px 80px rgba(0,0,0,.5)",borderRadius:4,willChange:"transform,opacity"}}>
                 <p style={{fontSize:11,letterSpacing:".4em",textTransform:"uppercase",color:"var(--gold)",marginBottom:24,fontWeight:700}}>02 Plan</p>
-                <h2 className="serif" style={{fontSize:"clamp(36px,4.5vw,64px)",fontWeight:300,lineHeight:1.05,marginBottom:24,color:"#fff"}}>Post rides,<br/>hangouts &amp; more.</h2>
-                <p style={{fontSize:15,lineHeight:1.9,color:"var(--ice)",opacity:.95,letterSpacing:".02em"}}>Share plans on the campus feed and pin meetups to BAU spots with the interactive map.</p>
+                <h2 className="serif" style={{fontSize:"clamp(28px,4.5vw,64px)",fontWeight:300,lineHeight:1.05,marginBottom:16,color:"#fff"}}>Post rides,<br/>hangouts &amp; more.</h2>
+                <p style={{fontSize:14,lineHeight:1.8,color:"var(--ice)",opacity:.95,letterSpacing:".02em"}}>Share plans on the campus feed and pin meetups to BAU spots with the interactive map.</p>
               </div>
-              <div ref={phaseCenterRef} style={{position:"absolute",bottom:"clamp(72px,12vh,120px)",left:"50%",transform:"translateX(-50%) translateY(40px) scale(0.9)",textAlign:"center",opacity:0,background:"rgba(10,22,40,.88)",backdropFilter:"blur(24px)",padding:"clamp(28px,4vw,40px) clamp(36px,6vw,72px)",borderBottom:"4px solid var(--lime)",boxShadow:"0 30px 80px rgba(0,0,0,.6)",borderRadius:4,willChange:"transform,opacity",width:"min(92vw,560px)"}}>
-                <p style={{fontSize:11,letterSpacing:".4em",textTransform:"uppercase",color:"var(--lime)",marginBottom:20,fontWeight:700}}>03 Go</p>
-                <h2 className="serif" style={{fontSize:"clamp(32px,3.5vw,56px)",fontWeight:300,lineHeight:1.1,color:"#fff"}}>Your campus life<br/>starts here.</h2>
+              <div ref={phaseCenterRef} className="phase-card phase-go" style={{position:"absolute",bottom:"clamp(72px,12vh,120px)",left:"50%",transform:"translateX(-50%) translateY(40px) scale(0.9)",textAlign:"center",opacity:0,background:"rgba(10,22,40,.88)",backdropFilter:"blur(24px)",padding:"clamp(28px,4vw,40px) clamp(36px,6vw,72px)",borderBottom:"4px solid var(--lime)",boxShadow:"0 30px 80px rgba(0,0,0,.6)",borderRadius:4,willChange:"transform,opacity",width:"min(92vw,560px)"}}>
+                <p style={{fontSize:11,letterSpacing:".4em",textTransform:"uppercase",color:"var(--lime)",marginBottom:16,fontWeight:700}}>03 Go</p>
+                <h2 className="serif" style={{fontSize:"clamp(26px,3.5vw,56px)",fontWeight:300,lineHeight:1.1,color:"#fff"}}>Your campus life<br/>starts here.</h2>
               </div>
             </div>
 
