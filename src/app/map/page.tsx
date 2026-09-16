@@ -27,7 +27,7 @@ import Link from "next/link";
 const InteractiveGoogleMap = dynamic(() => import("@/components/InteractiveGoogleMap"), {
   ssr: false,
   loading: () => (
-    <div className="rounded-[28px] border border-white/20 bg-white/10 animate-pulse" style={{ height: "min(52vh, 520px)" }} />
+    <div className="rounded-[28px] border border-white/20 bg-white/10 animate-pulse" style={{ height: "min(40vh, 360px)" }} />
   ),
 });
 
@@ -101,7 +101,7 @@ function MapContent() {
   const openInGoogleUrl = googleMapsSearchUrl(mapQuery);
 
   return (
-    <div className="max-w-6xl mx-auto px-4 pt-6 sm:pt-8 relative z-10 pb-4 md:pb-8">
+    <div className="max-w-6xl mx-auto px-4 pt-6 sm:pt-8 relative z-10 pb-8 md:pb-8">
       {openFloor && <FloorModelViewer key={openFloor} floor={openFloor} onClose={() => setOpenFloor(null)} />}
       <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-5">
         <div>
@@ -154,7 +154,7 @@ function MapContent() {
             title="BAU interactive map"
             src={interactiveUrl}
             className="w-full border-0 bg-white"
-            style={{ height: "min(360px, 45vh)" }}
+            style={{ height: "min(240px, 38vh)" }}
             allowFullScreen
           />
         </div>

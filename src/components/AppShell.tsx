@@ -4,14 +4,17 @@ export function AppStarfield() {
     <>
       <style>{`
         @keyframes star-to-right{0%{background-position:-550px -315px}100%{background-position:550px 315px}}
+        .app-stars{position:fixed;inset:0;overflow:hidden;pointer-events:none;z-index:0;}
         .sl{position:absolute;inset:0;background-repeat:repeat;background-size:550px auto;animation:star-to-right 65s linear infinite;pointer-events:none;}
         .sl1{background-image:url("https://gamba-animations.netlify.app/images/greetings/greetings_star_1.png");}
-        .sl2{opacity:.5;transform:scale(2);filter:blur(3px);background-image:url("https://gamba-animations.netlify.app/images/greetings/greetings_star_2.png");animation-duration:30s;}
-        .sl3{opacity:.3;transform:scale(1.5);filter:blur(1.5px);background-image:url("https://gamba-animations.netlify.app/images/greetings/greetings_star_3.png");animation-duration:40s;}
+        .sl2{opacity:.45;background-image:url("https://gamba-animations.netlify.app/images/greetings/greetings_star_2.png");animation-duration:30s;background-size:400px auto;}
+        .sl3{opacity:.28;background-image:url("https://gamba-animations.netlify.app/images/greetings/greetings_star_3.png");animation-duration:40s;background-size:480px auto;}
       `}</style>
-      <span className="sl sl1" />
-      <span className="sl sl2" />
-      <span className="sl sl3" />
+      <div className="app-stars" aria-hidden>
+        <span className="sl sl1" />
+        <span className="sl sl2" />
+        <span className="sl sl3" />
+      </div>
     </>
   );
 }

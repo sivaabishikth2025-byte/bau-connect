@@ -269,7 +269,6 @@ export default function Landing() {
           <ul className="landing-nav-links" style={{display:"flex",gap:40,listStyle:"none",justifyContent:"center",alignItems:"center",position:"relative",zIndex:1,margin:0,padding:0}}>
             <li><a href="#how" className="nl">How It Works</a></li>
             <li><a href="#discover" className="nl">Explore</a></li>
-            <li><a href="#stories" className="nl">Stories</a></li>
             <li><Link href="/login" className="nl">Sign In</Link></li>
           </ul>
           <Link href="/signup" style={{position:"relative",zIndex:1,justifySelf:"end"}}>
@@ -457,30 +456,6 @@ export default function Landing() {
                 <div style={{width:64,height:64,borderRadius:"50%",background:s.bg,color:s.c,display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 24px",fontSize:18,fontFamily:"'Nunito',sans-serif",fontWeight:300,position:"relative",zIndex:1}}>{s.n}</div>
                 <h3 className="serif" style={{fontSize:20,fontWeight:400,color:"#fff",marginBottom:12}}>{s.title}</h3>
                 <p style={{fontSize:12,lineHeight:1.9,color:"var(--ice)",opacity:.7}}>{s.body}</p>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* TESTIMONIALS */}
-        <section id="stories" style={{background:"var(--ice)",padding:"clamp(64px,10vw,120px) clamp(20px,4vw,56px)"}}>
-          <div style={{textAlign:"center",marginBottom:48}}>
-            <p style={{fontSize:10,letterSpacing:".4em",textTransform:"uppercase",color:"var(--navy)",opacity:.5,marginBottom:16}}>Real Stories</p>
-            <h2 className="serif" style={{fontSize:"clamp(32px,7vw,60px)",fontWeight:300,color:"var(--navy)"}}>They found<br/>their people.</h2>
-          </div>
-          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(260px,1fr))",gap:24}}>
-            {[
-              {text:"I posted a ride to Metro after my late class and two people from my program joined. So much easier than going alone.",author:"Priya M.",loc:"Computer Science, BAU",accent:"var(--coral)"},
-              {text:"Everyone is from BAU which makes it comfortable. I found a study group for midterms in under a day.",author:"Marcus L.",loc:"Business Admin, BAU",accent:"var(--gold)"},
-              {text:"We used the map to meet at The Bay, then walked to Lafayette Square. Finally talking to people outside my classes.",author:"Jordan & Alex",loc:"BAU Students",accent:"var(--sky)"},
-            ].map(t=>(
-              <div key={t.author} className="tc">
-                <div style={{position:"absolute",bottom:0,left:0,right:0,height:3,background:t.accent}}/>
-                <p className="serif" style={{fontSize:18,fontStyle:"italic",fontWeight:300,color:"var(--navy)",lineHeight:1.6,marginBottom:32}}>{t.text}</p>
-                <div style={{fontSize:10,letterSpacing:".25em",textTransform:"uppercase",color:"rgba(28,45,90,.5)"}}>
-                  <strong style={{display:"block",color:"var(--navy)",fontSize:12,marginBottom:4,letterSpacing:".15em"}}>{t.author}</strong>
-                  {t.loc}
-                </div>
               </div>
             ))}
           </div>

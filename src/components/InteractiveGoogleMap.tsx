@@ -9,7 +9,7 @@ import {
   nearestMapSpotId,
 } from "@/lib/map-spots";
 
-const MAP_HEIGHT = "min(52vh, 520px)";
+const MAP_HEIGHT = "min(40vh, 360px)";
 const LIBRARIES: ("places")[] = ["places"];
 const LOADER_ID = "bau-google-maps";
 
