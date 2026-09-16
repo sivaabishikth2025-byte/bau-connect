@@ -2,6 +2,8 @@
 export const ADMIN_EMAILS = [
   "smylavarapu@stu.bau.edu",
   "rmckie@bau.edu",
+  "cthinkratok@bau.edu",
+  "ratchata@bau.edu",
 ] as const;
 
 /** @deprecated use ADMIN_EMAILS */
