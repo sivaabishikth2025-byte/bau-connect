@@ -120,10 +120,11 @@ export default function FeedPost({
             {a.authorName}
           </Link>
           <span
-            className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full mt-0.5"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full mt-0.5"
             style={{ background: `${meta.color}22`, color: meta.color }}
           >
-            {meta.emoji} {meta.label}
+            <span aria-hidden>{meta.emoji}</span>
+            <span>{meta.label}</span>
           </span>
         </div>
         {userId && (userId === a.authorId || isAdmin) && (

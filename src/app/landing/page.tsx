@@ -220,6 +220,9 @@ export default function Landing() {
         .sc{width:32px;height:32px;border-radius:50%;border:1px solid rgba(187,211,238,.2);display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--ice);opacity:.5;transition:all .3s;text-decoration:none;}
         .sc:hover{opacity:1;border-color:var(--sky);color:var(--sky);}
         .orb{position:absolute;border-radius:50%;filter:blur(80px);animation:glow 4s ease-in-out infinite;}
+        @media (min-width:900px){
+          .stats-strip > div{grid-template-columns:repeat(4,minmax(0,1fr)) !important;max-width:960px !important;}
+        }
         @media (max-width:767px){
           .bau nav{padding:12px 16px !important;gap:12px !important;min-height:64px !important;grid-template-columns:1fr auto !important;}
           .bau nav ul{display:none !important;}
@@ -232,8 +235,7 @@ export default function Landing() {
           .ft{font-size:22px;}
           .tc{padding:32px 24px;}
           .tc::before{font-size:80px;left:16px;}
-          .how-line,.stat-div{display:none !important;}
-          .phase-dots span{display:none;}
+          .how-line{display:none !important;}
           .cta-form{flex-direction:column !important;}
           .cta-form input,.cta-form a,.cta-form button{width:100% !important;max-width:none !important;}
           /* Kill tall scroll-hijack parallax — sticky breaks under overflow-x on iOS */
@@ -426,16 +428,15 @@ export default function Landing() {
         </section>
 
         {/* STATS */}
-        <div style={{background:"var(--gold)",padding:"48px clamp(20px,4vw,56px)",display:"flex",alignItems:"center",justifyContent:"space-around",gap:24,flexWrap:"wrap"}}>
-          {[{n:"100%",l:"BAU Verified"},{n:"Free",l:"Always"},{n:"Real",l:"Connections"},{n:"4.9★",l:"Rating"}].map((s,i,arr)=>(
-            <div key={s.l} style={{display:"flex",alignItems:"center",gap:24}}>
-              <div style={{textAlign:"center"}}>
-                <div className="serif" style={{fontSize:"clamp(40px,10vw,72px)",fontWeight:300,color:"var(--navy)",lineHeight:1}}>{s.n}</div>
-                <div style={{fontSize:10,letterSpacing:".3em",textTransform:"uppercase",color:"rgba(28,45,90,.65)",marginTop:8}}>{s.l}</div>
+        <div className="stats-strip" style={{background:"var(--gold)",padding:"clamp(40px,8vw,64px) clamp(20px,5vw,56px)"}}>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(2,minmax(0,1fr))",gap:"clamp(28px,6vw,48px)",maxWidth:720,margin:"0 auto"}}>
+            {[{n:"100%",l:"BAU Verified"},{n:"Free",l:"Always"},{n:"Real",l:"Connections"},{n:"4.9★",l:"Rating"}].map(s=>(
+              <div key={s.l} style={{textAlign:"center"}}>
+                <div className="serif" style={{fontSize:"clamp(36px,9vw,64px)",fontWeight:300,color:"var(--navy)",lineHeight:1.05,letterSpacing:"-0.02em"}}>{s.n}</div>
+                <div style={{fontSize:11,letterSpacing:"0.12em",textTransform:"uppercase",color:"rgba(28,45,90,.7)",marginTop:10,fontWeight:700}}>{s.l}</div>
               </div>
-              {i<arr.length-1&&<div className="stat-div" style={{width:1,height:80,background:"rgba(28,45,90,.2)"}}/>}
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
 
         {/* HOW IT WORKS */}

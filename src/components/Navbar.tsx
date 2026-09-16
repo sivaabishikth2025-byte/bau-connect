@@ -71,16 +71,27 @@ export default function Navbar() {
   }, [user]);
 
   useEffect(() => {
-    const onClick = (e: MouseEvent) => {
-      if (!menuRef.current?.contains(e.target as Node)) setMenuOpen(false);
+    if (!menuOpen) return;
+    const onPointer = (e: MouseEvent | TouchEvent) => {
+      const target = e.target as Node;
+      if (!menuRef.current?.contains(target)) setMenuOpen(false);
     };
-    document.addEventListener("mousedown", onClick);
-    return () => document.removeEventListener("mousedown", onClick);
-  }, []);
+    document.addEventListener("mousedown", onPointer);
+    document.addEventListener("touchstart", onPointer, { passive: true });
+    return () => {
+      document.removeEventListener("mousedown", onPointer);
+      document.removeEventListener("touchstart", onPointer);
+    };
+  }, [menuOpen]);
 
   useEffect(() => {
     setMenuOpen(false);
   }, [pathname]);
+
+  const go = (href: string) => {
+    setMenuOpen(false);
+    router.push(href);
+  };
 
   const linkClass = (active: boolean) =>
     `relative flex flex-1 flex-col md:flex-none md:flex-row items-center justify-center gap-0.5 md:gap-1.5 px-0.5 md:px-2.5 py-1.5 min-h-[44px] md:min-h-0 min-w-0 rounded-2xl transition text-[10px] leading-tight md:text-sm font-semibold ${
@@ -88,7 +99,7 @@ export default function Navbar() {
     }`;
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 w-full max-w-[100%] bg-white border-t border-gray-100 shadow-lg z-50 pb-[env(safe-area-inset-bottom)] overflow-x-clip md:top-0 md:bottom-auto md:border-t-0 md:border-b md:shadow-md md:h-20 md:pb-0 md:overflow-visible">
+    <nav className="fixed bottom-0 left-0 right-0 w-full bg-white border-t border-gray-100 shadow-lg z-50 pb-[env(safe-area-inset-bottom)] md:top-0 md:bottom-auto md:border-t-0 md:border-b md:shadow-md md:h-20 md:pb-0">
       <div className="max-w-screen-xl mx-auto flex h-full items-center justify-between px-0.5 md:px-6 py-1 md:py-0 w-full">
         <div className="hidden md:flex items-center shrink-0 min-w-0">
           <Link href="/landing" className="flex items-center shrink-0">
@@ -96,7 +107,7 @@ export default function Navbar() {
           </Link>
         </div>
 
-        <div className="flex items-stretch md:items-center gap-0 md:gap-1 flex-1 md:flex-none justify-around md:justify-end w-full min-w-0 overflow-x-clip md:overflow-visible">
+        <div className="flex items-stretch md:items-center gap-0 md:gap-1 flex-1 md:flex-none justify-around md:justify-end w-full min-w-0">
           {PRIMARY_LINKS.map(({ href, label, icon: Icon }) => (
             <Link key={href} href={href} className={linkClass(isActive(href))}>
               <Icon size={18} className="md:w-[18px] md:h-[18px] shrink-0" />
@@ -122,9 +133,11 @@ export default function Navbar() {
 
           <div ref={menuRef} className="relative flex flex-1 md:flex-none min-w-0">
             <button
+              type="button"
               onClick={() => setMenuOpen(o => !o)}
               className={`w-full ${linkClass(moreActive)}`}
               aria-label="More"
+              aria-expanded={menuOpen}
             >
               <span className="relative">
                 <Menu size={18} className="md:w-[18px] md:h-[18px]" />
@@ -138,67 +151,79 @@ export default function Navbar() {
             </button>
 
             {menuOpen && (
-              <div className="absolute bottom-[calc(100%+8px)] right-0 md:bottom-auto md:top-12 md:right-0 w-56 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-[80]">
-                <button
-                  onClick={() => {
-                    setMenuOpen(false);
-                    router.push("/notifications");
-                  }}
-                  className="md:hidden w-full flex items-center gap-3 px-4 py-3.5 text-left hover:bg-light transition"
+              <>
+                {/* Mobile: fixed sheet above bottom nav (avoids overflow clipping) */}
+                <div
+                  className="md:hidden fixed inset-0 z-[90] bg-black/30"
+                  aria-hidden
+                  onClick={() => setMenuOpen(false)}
+                />
+                <div className="md:hidden fixed left-3 right-3 z-[100] rounded-2xl bg-white shadow-2xl border border-gray-100 overflow-hidden"
+                  style={{ bottom: "calc(4.25rem + env(safe-area-inset-bottom, 0px))" }}
                 >
-                  <span className="relative">
-                    <Bell size={18} className="text-primary" />
-                    {unread > 0 && (
-                      <span className="absolute -top-1.5 -right-1.5 min-w-[14px] h-3.5 px-1 rounded-full bg-accent text-white text-[8px] font-black flex items-center justify-center">
-                        {unread > 9 ? "9+" : unread}
-                      </span>
-                    )}
-                  </span>
-                  <span className="font-bold text-sm text-gray-900">Alerts</span>
-                </button>
-                <button
-                  onClick={() => {
-                    setMenuOpen(false);
-                    router.push("/profile");
-                  }}
-                  className="md:hidden w-full flex items-center gap-3 px-4 py-3.5 text-left hover:bg-light transition border-t border-gray-100"
-                >
-                  <User size={18} className="text-primary" />
-                  <span className="font-bold text-sm text-gray-900">Profile</span>
-                </button>
-                <button
-                  onClick={() => {
-                    setMenuOpen(false);
-                    router.push("/volunteers");
-                  }}
-                  className="w-full flex items-center gap-3 px-4 py-3.5 text-left hover:bg-light transition border-t border-gray-100"
-                >
-                  <HandHeart size={18} className="text-primary" />
-                  <span className="font-bold text-sm text-gray-900">Volunteer</span>
-                </button>
-                {isAdmin && (
+                  <button type="button" onClick={() => go("/notifications")} className="w-full flex items-center gap-3 px-4 py-3.5 text-left active:bg-light">
+                    <span className="relative">
+                      <Bell size={18} className="text-primary" />
+                      {unread > 0 && (
+                        <span className="absolute -top-1.5 -right-1.5 min-w-[14px] h-3.5 px-1 rounded-full bg-accent text-white text-[8px] font-black flex items-center justify-center">
+                          {unread > 9 ? "9+" : unread}
+                        </span>
+                      )}
+                    </span>
+                    <span className="font-bold text-sm text-gray-900">Alerts</span>
+                  </button>
+                  <button type="button" onClick={() => go("/profile")} className="w-full flex items-center gap-3 px-4 py-3.5 text-left active:bg-light border-t border-gray-100">
+                    <User size={18} className="text-primary" />
+                    <span className="font-bold text-sm text-gray-900">Profile</span>
+                  </button>
+                  <button type="button" onClick={() => go("/volunteers")} className="w-full flex items-center gap-3 px-4 py-3.5 text-left active:bg-light border-t border-gray-100">
+                    <HandHeart size={18} className="text-primary" />
+                    <span className="font-bold text-sm text-gray-900">Volunteer</span>
+                  </button>
+                  {isAdmin && (
+                    <button type="button" onClick={() => go("/admin")} className="w-full flex items-center gap-3 px-4 py-3.5 text-left active:bg-light border-t border-gray-100">
+                      <Shield size={18} className="text-primary" />
+                      <span className="font-bold text-sm text-gray-900">Admin</span>
+                    </button>
+                  )}
                   <button
+                    type="button"
                     onClick={() => {
                       setMenuOpen(false);
-                      router.push("/admin");
+                      signOut(auth).then(() => router.replace("/landing"));
                     }}
-                    className="w-full flex items-center gap-3 px-4 py-3.5 text-left hover:bg-light transition border-t border-gray-100"
+                    className="w-full flex items-center gap-3 px-4 py-3.5 text-left active:bg-accent/10 border-t border-gray-100"
                   >
-                    <Shield size={18} className="text-primary" />
-                    <span className="font-bold text-sm text-gray-900">Admin</span>
+                    <LogOut size={18} className="text-accent" />
+                    <span className="font-bold text-sm text-accent">Log out</span>
                   </button>
-                )}
-                <button
-                  onClick={() => {
-                    setMenuOpen(false);
-                    signOut(auth).then(() => router.replace("/landing"));
-                  }}
-                  className="w-full flex items-center gap-3 px-4 py-3.5 text-left hover:bg-accent/10 transition border-t border-gray-100"
-                >
-                  <LogOut size={18} className="text-accent" />
-                  <span className="font-bold text-sm text-accent">Log out</span>
-                </button>
-              </div>
+                </div>
+
+                {/* Desktop dropdown */}
+                <div className="hidden md:block absolute top-12 right-0 w-56 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-[80]">
+                  <button type="button" onClick={() => go("/volunteers")} className="w-full flex items-center gap-3 px-4 py-3.5 text-left hover:bg-light transition">
+                    <HandHeart size={18} className="text-primary" />
+                    <span className="font-bold text-sm text-gray-900">Volunteer</span>
+                  </button>
+                  {isAdmin && (
+                    <button type="button" onClick={() => go("/admin")} className="w-full flex items-center gap-3 px-4 py-3.5 text-left hover:bg-light transition border-t border-gray-100">
+                      <Shield size={18} className="text-primary" />
+                      <span className="font-bold text-sm text-gray-900">Admin</span>
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMenuOpen(false);
+                      signOut(auth).then(() => router.replace("/landing"));
+                    }}
+                    className="w-full flex items-center gap-3 px-4 py-3.5 text-left hover:bg-accent/10 transition border-t border-gray-100"
+                  >
+                    <LogOut size={18} className="text-accent" />
+                    <span className="font-bold text-sm text-accent">Log out</span>
+                  </button>
+                </div>
+              </>
             )}
           </div>
         </div>
