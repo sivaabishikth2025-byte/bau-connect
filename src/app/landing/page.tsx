@@ -486,14 +486,18 @@ export default function Landing() {
             </div>
             <div className="footer-cols" style={{display:"grid",gridTemplateColumns:"repeat(3,minmax(0,1fr))",gap:"clamp(16px,4vw,48px)",width:"100%",maxWidth:420}}>
               {[
-                {title:"Product",links:["How It Works","People","Campus Feed","Maps"]},
-                {title:"University",links:["BAU Website","Student Portal","Campus","Events"]},
-                {title:"Legal",links:["Privacy","Terms","Safety","Cookies"]},
+                {title:"Product",links:[{label:"How It Works",href:"#how"},{label:"People",href:"/dashboard"},{label:"Campus Feed",href:"/activities"},{label:"Maps",href:"/map"}]},
+                {title:"University",links:[{label:"BAU Website",href:"https://bau.edu"},{label:"Student Portal",href:"https://bau.edu"},{label:"Campus",href:"/map"},{label:"Events",href:"/activities"}]},
+                {title:"Legal",links:[{label:"Privacy",href:"/privacy"},{label:"Terms",href:"/terms"},{label:"Safety",href:"/terms#safety"},{label:"Cookies",href:"/privacy#cookies"}]},
               ].map(col=>(
                 <div key={col.title}>
                   <p style={{fontSize:9,letterSpacing:".35em",textTransform:"uppercase",color:"var(--gold)",marginBottom:20}}>{col.title}</p>
                   <ul style={{listStyle:"none"}}>
-                    {col.links.map(l=><li key={l} style={{marginBottom:10}}><a href="#" style={{color:"rgba(187,211,238,.5)",textDecoration:"none",fontSize:12}}>{l}</a></li>)}
+                    {col.links.map(l=>(
+                      <li key={l.label} style={{marginBottom:10}}>
+                        <a href={l.href} style={{color:"rgba(187,211,238,.5)",textDecoration:"none",fontSize:12}}>{l.label}</a>
+                      </li>
+                    ))}
                   </ul>
                 </div>
               ))}
