@@ -58,7 +58,7 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-8 relative overflow-x-hidden overflow-y-auto" style={{background:"radial-gradient(ellipse at 30% 60%,rgba(40,170,226,.15),transparent 60%),radial-gradient(ellipse at 80% 20%,rgba(219,166,49,.1),transparent 50%),#1C2D5A"}}>
+    <div className="min-h-screen flex items-center justify-center px-4 py-8 relative overflow-x-clip overflow-y-auto" style={{background:"radial-gradient(ellipse at 30% 60%,rgba(40,170,226,.15),transparent 60%),radial-gradient(ellipse at 80% 20%,rgba(219,166,49,.1),transparent 50%),#1C2D5A"}}>
       <style>{`
         @keyframes star-to-right {
           0% { background-position: -550px -315px; }
@@ -66,12 +66,14 @@ export default function Login() {
         }
         .star-layer { position:absolute; inset:0; background-repeat:repeat; background-size:550px auto; animation:star-to-right 65s linear infinite; pointer-events:none; }
         .sl1 { background-image:url("https://gamba-animations.netlify.app/images/greetings/greetings_star_1.png"); }
-        .sl2 { opacity:.5; transform:scale(2); filter:blur(3px); background-image:url("https://gamba-animations.netlify.app/images/greetings/greetings_star_2.png"); animation-duration:30s; }
-        .sl3 { opacity:.3; transform:scale(1.5); filter:blur(1.5px); background-image:url("https://gamba-animations.netlify.app/images/greetings/greetings_star_3.png"); animation-duration:40s; }
+        .sl2 { opacity:.45; background-image:url("https://gamba-animations.netlify.app/images/greetings/greetings_star_2.png"); animation-duration:30s; background-size:400px auto; }
+        .sl3 { opacity:.3; background-image:url("https://gamba-animations.netlify.app/images/greetings/greetings_star_3.png"); animation-duration:40s; background-size:480px auto; }
       `}</style>
-      <span className="star-layer sl1"/>
-      <span className="star-layer sl2"/>
-      <span className="star-layer sl3"/>
+      <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden>
+        <span className="star-layer sl1"/>
+        <span className="star-layer sl2"/>
+        <span className="star-layer sl3"/>
+      </div>
       <div className="bg-white rounded-3xl shadow-xl p-6 sm:p-8 w-full max-w-sm relative z-10 my-auto">
 
         {/* Logo */}

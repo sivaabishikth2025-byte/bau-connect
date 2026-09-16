@@ -83,24 +83,24 @@ export default function Navbar() {
   }, [pathname]);
 
   const linkClass = (active: boolean) =>
-    `relative flex flex-1 flex-col md:flex-none md:flex-row items-center justify-center gap-0.5 md:gap-1.5 px-1 md:px-2.5 py-2 min-h-[48px] md:min-h-0 rounded-2xl transition text-[11px] md:text-sm font-semibold ${
+    `relative flex flex-1 flex-col md:flex-none md:flex-row items-center justify-center gap-0.5 md:gap-1.5 px-0.5 md:px-2.5 py-1.5 min-h-[44px] md:min-h-0 min-w-0 rounded-2xl transition text-[10px] leading-tight md:text-sm font-semibold ${
       active ? "text-white bg-primary" : "text-gray-400 hover:text-primary hover:bg-light"
     }`;
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 shadow-lg z-50 pb-[env(safe-area-inset-bottom)] md:top-0 md:bottom-auto md:border-t-0 md:border-b md:shadow-md md:h-20 md:pb-0">
-      <div className="max-w-screen-xl mx-auto flex h-full items-center justify-between px-1 md:px-6 py-1.5 md:py-0">
+    <nav className="fixed bottom-0 left-0 right-0 w-full max-w-[100%] bg-white border-t border-gray-100 shadow-lg z-50 pb-[env(safe-area-inset-bottom)] overflow-x-clip md:top-0 md:bottom-auto md:border-t-0 md:border-b md:shadow-md md:h-20 md:pb-0 md:overflow-visible">
+      <div className="max-w-screen-xl mx-auto flex h-full items-center justify-between px-0.5 md:px-6 py-1 md:py-0 w-full">
         <div className="hidden md:flex items-center shrink-0 min-w-0">
           <Link href="/landing" className="flex items-center shrink-0">
             <BauLogo size="nav" alt="BAU Connect" className="cursor-pointer hover:opacity-90 transition shrink-0" />
           </Link>
         </div>
 
-        <div className="flex items-stretch md:items-center gap-0 md:gap-1 flex-1 md:flex-none justify-around md:justify-end overflow-visible">
+        <div className="flex items-stretch md:items-center gap-0 md:gap-1 flex-1 md:flex-none justify-around md:justify-end w-full min-w-0 overflow-x-clip md:overflow-visible">
           {PRIMARY_LINKS.map(({ href, label, icon: Icon }) => (
             <Link key={href} href={href} className={linkClass(isActive(href))}>
-              <Icon size={20} className="md:w-[18px] md:h-[18px]" />
-              <span>{label}</span>
+              <Icon size={18} className="md:w-[18px] md:h-[18px] shrink-0" />
+              <span className="truncate max-w-full">{label}</span>
             </Link>
           ))}
 
@@ -120,16 +120,16 @@ export default function Navbar() {
             </Link>
           ))}
 
-          <div ref={menuRef} className="relative flex flex-1 md:flex-none">
+          <div ref={menuRef} className="relative flex flex-1 md:flex-none min-w-0">
             <button
               onClick={() => setMenuOpen(o => !o)}
               className={`w-full ${linkClass(moreActive)}`}
               aria-label="More"
             >
               <span className="relative">
-                <Menu size={20} className="md:w-[18px] md:h-[18px]" />
+                <Menu size={18} className="md:w-[18px] md:h-[18px]" />
                 {unread > 0 && (
-                  <span className="md:hidden absolute -top-1.5 -right-2 min-w-[14px] h-3.5 px-1 rounded-full bg-accent text-white text-[8px] font-black flex items-center justify-center">
+                  <span className="md:hidden absolute -top-1 -right-1.5 min-w-[14px] h-3.5 px-1 rounded-full bg-accent text-white text-[8px] font-black flex items-center justify-center">
                     {unread > 9 ? "9+" : unread}
                   </span>
                 )}

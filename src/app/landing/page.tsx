@@ -170,8 +170,8 @@ export default function Landing() {
         :root{--navy:#1C2D5A;--gold:#DBA631;--coral:#F15B47;--lime:#CBDB2A;--sky:#28AAE2;--ice:#BBD3EE;}
         *{margin:0;padding:0;box-sizing:border-box;}
         html{scroll-behavior:smooth;}
-        body{background:var(--navy);overflow-x:hidden;}
-        .bau{background:var(--navy);color:#fff;font-family:'Nunito',sans-serif;}
+        body{background:var(--navy);overflow-x:clip;width:100%;max-width:100%;}
+        .bau{background:var(--navy);color:#fff;font-family:'Nunito',sans-serif;overflow-x:clip;width:100%;max-width:100%;}
         .logo{font-size:22px;font-weight:700;letter-spacing:.25em;color:#fff;text-transform:uppercase;}
         .logo span{color:var(--gold);}
         .nl{color:var(--ice);text-decoration:none;font-size:12px;letter-spacing:.2em;text-transform:uppercase;transition:color .3s;}
@@ -189,10 +189,10 @@ export default function Landing() {
         }
         .star-layer { position:absolute; inset:0; background-repeat:repeat; background-size:550px auto; animation:star-to-right 65s linear infinite; pointer-events:none; z-index:0; }
         .sl1 { background-image:url("https://gamba-animations.netlify.app/images/greetings/greetings_star_1.png"); background-blend-mode:screen; }
-        .sl2 { opacity:.5; transform:scale(2); filter:blur(3px); background-image:url("https://gamba-animations.netlify.app/images/greetings/greetings_star_2.png"); animation-duration:30s; }
-        .sl3 { opacity:.3; transform:scale(1.5); filter:blur(1.5px); background-image:url("https://gamba-animations.netlify.app/images/greetings/greetings_star_3.png"); animation-duration:40s; }
-        .sl4 { transform:scale(0.95); background-image:url("https://gamba-animations.netlify.app/images/greetings/greetings_star_2.png"); animation-duration:90s; }
-        .sl5 { transform:scale(0.9); background-image:url("https://gamba-animations.netlify.app/images/greetings/greetings_star_3.png"); animation-duration:190s; }
+        .sl2 { opacity:.5; background-image:url("https://gamba-animations.netlify.app/images/greetings/greetings_star_2.png"); animation-duration:30s; background-size:400px auto; }
+        .sl3 { opacity:.3; background-image:url("https://gamba-animations.netlify.app/images/greetings/greetings_star_3.png"); animation-duration:40s; background-size:480px auto; }
+        .sl4 { opacity:.55; background-image:url("https://gamba-animations.netlify.app/images/greetings/greetings_star_2.png"); animation-duration:90s; background-size:520px auto; }
+        .sl5 { opacity:.4; background-image:url("https://gamba-animations.netlify.app/images/greetings/greetings_star_3.png"); animation-duration:190s; background-size:460px auto; }
         .hero-content { position:relative; z-index:10; text-align:center; isolation:isolate; }
         @keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
         @keyframes pulse{0%,100%{opacity:.4;transform:scaleY(1)}50%{opacity:1;transform:scaleY(1.3)}}
@@ -295,7 +295,7 @@ export default function Landing() {
           </div>
 
           {/* Stars */}
-          <div style={{position:"absolute",inset:0,pointerEvents:"none"}}>
+          <div style={{position:"absolute",inset:0,pointerEvents:"none",overflow:"hidden"}}>
             <span className="star-layer sl1"/>
             <span className="star-layer sl2"/>
             <span className="star-layer sl3"/>
