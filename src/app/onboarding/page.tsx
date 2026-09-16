@@ -119,7 +119,7 @@ export default function Onboarding() {
 
           <input required placeholder="Full name" value={name} onChange={e => setName(e.target.value)}
             className="w-full border border-gray-200 rounded-2xl px-4 py-3 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary/30" />
-          <input required type="number" placeholder="Age" value={age} onChange={e => setAge(e.target.value)} min={18} max={35}
+          <input required type="number" placeholder="Age" value={age} onChange={e => setAge(e.target.value)}
             className="w-full border border-gray-200 rounded-2xl px-4 py-3 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary/30" />
 
           <div>
