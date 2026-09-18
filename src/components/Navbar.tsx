@@ -7,7 +7,7 @@ import { collection, onSnapshot, query, where } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
 import {
-  Users, CalendarDays, Map, UserPlus, User, LogOut, HandHeart, Menu, Bell, Shield,
+  Users, CalendarDays, Map, UserPlus, User, LogOut, HandHeart, Menu, Bell, Shield, Flag,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import BauLogo from "@/components/BauLogo";
@@ -180,6 +180,10 @@ export default function Navbar() {
                     <HandHeart size={18} className="text-primary" />
                     <span className="font-bold text-sm text-gray-900">Volunteer</span>
                   </button>
+                  <button type="button" onClick={() => go("/child-safety")} className="w-full flex items-center gap-3 px-4 py-3.5 text-left active:bg-light border-t border-gray-100">
+                    <Flag size={18} className="text-primary" />
+                    <span className="font-bold text-sm text-gray-900">Child safety</span>
+                  </button>
                   {isAdmin && (
                     <button type="button" onClick={() => go("/admin")} className="w-full flex items-center gap-3 px-4 py-3.5 text-left active:bg-light border-t border-gray-100">
                       <Shield size={18} className="text-primary" />
@@ -204,6 +208,10 @@ export default function Navbar() {
                   <button type="button" onClick={() => go("/volunteers")} className="w-full flex items-center gap-3 px-4 py-3.5 text-left hover:bg-light transition">
                     <HandHeart size={18} className="text-primary" />
                     <span className="font-bold text-sm text-gray-900">Volunteer</span>
+                  </button>
+                  <button type="button" onClick={() => go("/child-safety")} className="w-full flex items-center gap-3 px-4 py-3.5 text-left hover:bg-light transition border-t border-gray-100">
+                    <Flag size={18} className="text-primary" />
+                    <span className="font-bold text-sm text-gray-900">Child safety</span>
                   </button>
                   {isAdmin && (
                     <button type="button" onClick={() => go("/admin")} className="w-full flex items-center gap-3 px-4 py-3.5 text-left hover:bg-light transition border-t border-gray-100">
