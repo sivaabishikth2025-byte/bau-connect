@@ -5,6 +5,8 @@
       "namespace": "android_app",
       "package_name": "com.baustudentconnect.app",
       "sha256_cert_fingerprints": [
+        "54:F9:2A:54:BB:65:79:97:63:88:4D:DC:86:66:BC:E9:52:98:EA:89:82:3D:05:54:EB:A3:CB:6B:D6:C8:F6:3D",
+        "B9:8A:0A:F8:04:04:AB:C0:78:84:42:AE:3B:19:AA:A6:B8:BE:F1:AC:CB:77:82:CC:B4:52:09:91:61:6A:9F:48",
         "2A:D0:91:CC:BD:32:4F:0C:C8:FB:F8:88:FC:2D:CA:FC:81:0B:C1:12:22:61:03:D7:E4:56:12:8A:32:72:64:08"
       ]
     }
