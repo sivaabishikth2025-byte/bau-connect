@@ -1,0 +1,12 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": ["V657Z6N65A.com.baustudentconnect.app"],
+        "components": [
+          { "/": "/auth/action*", "comment": "Email verification and password reset links" }
+        ]
+      }
+    ]
+  }
+}
