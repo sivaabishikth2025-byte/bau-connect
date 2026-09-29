@@ -2,11 +2,23 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { applyActionCode, confirmPasswordReset, verifyPasswordResetCode } from "firebase/auth";
+import { applyActionCode, confirmPasswordReset, reload, verifyPasswordResetCode } from "firebase/auth";
 import { auth } from "@/lib/firebase";
+import { isAppleDevice } from "@/lib/google-maps";
+import { isNativeApp } from "@/lib/native";
 import Link from "next/link";
 
 type Status = "loading" | "success" | "error" | "reset";
+
+/** Link that hands a phone browser back to the installed app (null on desktop / inside the app). */
+function openAppUrl() {
+  if (typeof navigator === "undefined" || isNativeApp()) return null;
+  if (/Android/i.test(navigator.userAgent)) {
+    return "intent://open#Intent;scheme=baustudentconnect;package=com.baustudentconnect.app;end";
+  }
+  if (isAppleDevice()) return "baustudentconnect://open";
+  return null;
+}
 
 export default function AuthActionPage() {
   const router = useRouter();
@@ -19,6 +31,7 @@ export default function AuthActionPage() {
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [appUrl, setAppUrl] = useState<string | null>(null);
 
   useEffect(() => {
     if (!mode || !oobCode) {
@@ -28,16 +41,30 @@ export default function AuthActionPage() {
     }
 
     if (mode === "verifyEmail") {
-      applyActionCode(auth, oobCode)
-        .then(() => {
-          setStatus("success");
-          setMessage("Your email is verified. You can sign in to BAU Connect now.");
-          setTimeout(() => router.replace("/login"), 2500);
-        })
-        .catch(() => {
+      const finish = async (applied: boolean) => {
+        await auth.authStateReady();
+        const user = auth.currentUser;
+        if (user) await reload(user).catch(() => {});
+        // Outlook Safe Links can pre-open the link and consume the code; the account is still verified.
+        if (!applied && !user?.emailVerified) {
           setStatus("error");
-          setMessage("This verification link is invalid or has already been used.");
-        });
+          setMessage("This verification link is invalid or has already been used. If you already verified, open BAU Connect and sign in.");
+          setAppUrl(openAppUrl());
+          return;
+        }
+        const handOff = openAppUrl();
+        setAppUrl(handOff);
+        setStatus("success");
+        if (handOff) {
+          setMessage("Your email is verified. Tap below to go back to the BAU Connect app.");
+          return;
+        }
+        setMessage(user
+          ? "Your email is verified. Taking you into BAU Connect..."
+          : "Your email is verified. You can sign in to BAU Connect now.");
+        setTimeout(() => router.replace(user ? "/" : "/login"), 1500);
+      };
+      applyActionCode(auth, oobCode).then(() => finish(true), () => finish(false));
       return;
     }
 
@@ -70,9 +97,15 @@ export default function AuthActionPage() {
     setMessage("");
     try {
       await confirmPasswordReset(auth, oobCode, password);
+      const handOff = openAppUrl();
+      setAppUrl(handOff);
       setStatus("success");
-      setMessage("Password updated. Redirecting to sign in...");
-      setTimeout(() => router.replace("/login"), 2500);
+      if (handOff) {
+        setMessage("Password updated. Go back to the BAU Connect app to sign in.");
+      } else {
+        setMessage("Password updated. Redirecting to sign in...");
+        setTimeout(() => router.replace("/login"), 2500);
+      }
     } catch {
       setStatus("error");
       setMessage("Could not reset password. Request a new link from the login page.");
@@ -91,8 +124,13 @@ export default function AuthActionPage() {
         {status === "success" && (
           <>
             <p className="text-green-600 font-semibold mb-4">{message}</p>
+            {appUrl && (
+              <a href={appUrl} className="block w-full bg-primary text-white rounded-2xl py-3 font-bold mb-3">
+                Open BAU Connect app
+              </a>
+            )}
             <Link href="/login" className="text-primary font-semibold hover:underline">
-              Go to sign in
+              {appUrl ? "Continue on the website" : "Go to sign in"}
             </Link>
           </>
         )}
@@ -100,6 +138,11 @@ export default function AuthActionPage() {
         {status === "error" && (
           <>
             <p className="text-red-500 mb-4">{message}</p>
+            {appUrl && (
+              <a href={appUrl} className="block w-full bg-primary text-white rounded-2xl py-3 font-bold mb-3">
+                Open BAU Connect app
+              </a>
+            )}
             <Link href="/login" className="text-primary font-semibold hover:underline">
               Back to sign in
             </Link>

@@ -94,7 +94,7 @@ export default function Navbar() {
   };
 
   const linkClass = (active: boolean) =>
-    `relative flex flex-1 flex-col md:flex-none md:flex-row items-center justify-center gap-0.5 md:gap-1.5 px-0.5 md:px-2.5 py-1.5 min-h-[44px] md:min-h-0 min-w-0 rounded-2xl transition text-[10px] leading-tight md:text-sm font-semibold ${
+    `relative flex flex-1 flex-col md:flex-none md:flex-row items-center justify-center gap-0.5 md:gap-1 lg:gap-1.5 px-0.5 md:px-2 lg:px-2.5 py-1.5 min-h-[44px] md:min-h-0 min-w-0 md:shrink-0 rounded-2xl transition text-[10px] leading-tight md:text-[13px] lg:text-sm font-semibold whitespace-nowrap ${
       active ? "text-white bg-primary" : "text-gray-400 hover:text-primary hover:bg-light"
     }`;
 
@@ -107,11 +107,11 @@ export default function Navbar() {
           </Link>
         </div>
 
-        <div className="flex items-stretch md:items-center gap-0 md:gap-1 flex-1 md:flex-none justify-around md:justify-end w-full min-w-0">
+        <div className="flex items-stretch md:items-center gap-0 md:gap-0.5 lg:gap-1 flex-1 md:flex-none justify-around md:justify-end w-full md:w-auto min-w-0">
           {PRIMARY_LINKS.map(({ href, label, icon: Icon }) => (
-            <Link key={href} href={href} className={linkClass(isActive(href))}>
+            <Link key={href} href={href} title={label} className={linkClass(isActive(href))}>
               <Icon size={18} className="md:w-[18px] md:h-[18px] shrink-0" />
-              <span className="truncate max-w-full">{label}</span>
+              <span className="truncate max-w-full md:sr-only lg:not-sr-only">{label}</span>
             </Link>
           ))}
 
@@ -119,10 +119,11 @@ export default function Navbar() {
             <Link
               key={href}
               href={href}
+              title={label}
               className={`hidden md:flex ${linkClass(isActive(href))}`}
             >
-              <Icon size={18} />
-              <span>{label}</span>
+              <Icon size={18} className="shrink-0" />
+              <span className="md:sr-only lg:not-sr-only">{label}</span>
               {showBadge && unread > 0 && (
                 <span className="absolute top-1 right-1 min-w-[14px] h-3.5 px-1 rounded-full bg-accent text-white text-[8px] font-black flex items-center justify-center">
                   {unread > 9 ? "9+" : unread}
@@ -147,7 +148,7 @@ export default function Navbar() {
                   </span>
                 )}
               </span>
-              <span>More</span>
+              <span className="md:sr-only lg:not-sr-only">More</span>
             </button>
 
             {menuOpen && (

@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import NotificationsProvider from "@/components/NotificationsProvider";
+import NativeDeepLinks from "@/components/NativeDeepLinks";
 
 export const metadata: Metadata = {
   title: "BAU Connect | Campus life, together",
@@ -37,6 +38,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body>
         <AuthProvider>
+          <NativeDeepLinks />
           <NotificationsProvider>{children}</NotificationsProvider>
         </AuthProvider>
       </body>

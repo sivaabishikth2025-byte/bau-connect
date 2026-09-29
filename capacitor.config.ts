@@ -14,7 +14,6 @@ const config: CapacitorConfig = {
       "*.baustudentconnect.com",
       "*.googleapis.com",
       "*.gstatic.com",
-      "*.google.com",
       "*.firebaseapp.com",
       "*.firebaseio.com",
       "*.cloudinary.com",

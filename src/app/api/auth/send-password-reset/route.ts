@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminAuth } from "@/lib/firebase-admin";
 import { mailCard, sendMail } from "@/lib/mail";
+import { toAppActionLink } from "@/lib/authActionLink";
 
 export const runtime = "nodejs";
 
@@ -39,10 +40,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: true });
     }
 
-    const link = await adminAuth().generatePasswordResetLink(normalized, {
+    const firebaseLink = await adminAuth().generatePasswordResetLink(normalized, {
       url: `${appUrl()}/login`,
       handleCodeInApp: false,
     });
+    const link = toAppActionLink(firebaseLink, appUrl());
 
     const subject = "Reset your BAU Connect password";
     const text = [subject, "", link, "", "If you did not request this, ignore this email."].join("\n");

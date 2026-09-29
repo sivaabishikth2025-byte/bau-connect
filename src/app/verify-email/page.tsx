@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { reload, signOut } from "firebase/auth";
 import { auth } from "@/lib/firebase";
@@ -11,6 +11,28 @@ export default function VerifyEmail() {
   const [resending, setResending] = useState(false);
   const [msg, setMsg] = useState("");
   const [error, setError] = useState("");
+
+  // Students often verify in a browser (e.g. from Outlook) and then switch back; pick that up silently.
+  useEffect(() => {
+    const silentCheck = async () => {
+      if (document.visibilityState !== "visible") return;
+      await auth.authStateReady();
+      const user = auth.currentUser;
+      if (!user) {
+        router.replace("/login");
+        return;
+      }
+      await reload(user).catch(() => {});
+      if (auth.currentUser?.emailVerified) router.replace("/");
+    };
+    silentCheck();
+    document.addEventListener("visibilitychange", silentCheck);
+    window.addEventListener("focus", silentCheck);
+    return () => {
+      document.removeEventListener("visibilitychange", silentCheck);
+      window.removeEventListener("focus", silentCheck);
+    };
+  }, [router]);
 
   const checkVerification = async () => {
     setChecking(true);

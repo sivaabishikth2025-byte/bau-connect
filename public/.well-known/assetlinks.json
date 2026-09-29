@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.baustudentconnect.app",
+      "sha256_cert_fingerprints": [
+        "2A:D0:91:CC:BD:32:4F:0C:C8:FB:F8:88:FC:2D:CA:FC:81:0B:C1:12:22:61:03:D7:E4:56:12:8A:32:72:64:08"
+      ]
+    }
+  }
+]

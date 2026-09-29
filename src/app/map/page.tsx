@@ -11,12 +11,16 @@ import {
   floorLabel, hasFloorModel, volunteerCategoryMeta
 } from "@/lib/constants";
 import {
+  appleMapsDirectionsUrl,
+  appleMapsSearchUrl,
   campusMapQuery,
   googleMapsDirectionsUrl,
   googleMapsSearchUrl,
+  isAppleDevice,
   landmarkMapQuery,
   transitMapQuery,
 } from "@/lib/google-maps";
+import { isNativeApp } from "@/lib/native";
 import { VolunteerJob } from "@/types";
 import {
   ExternalLink, Navigation, Train,
@@ -93,12 +97,23 @@ function MapContent() {
     return campusMapQuery();
   }, [spotKind, selectedTransit, selectedLandmark]);
 
-  const directionsUrl = useMemo(() => {
-    if (spotKind === "campus") return googleMapsDirectionsUrl(BAU_CAMPUS.address);
-    return googleMapsDirectionsUrl(mapQuery, BAU_CAMPUS.address, "walking");
-  }, [spotKind, mapQuery]);
+  const [apple, setApple] = useState(false);
+  const [native, setNative] = useState(false);
+  useEffect(() => {
+    setApple(isAppleDevice());
+    setNative(isNativeApp());
+  }, []);
 
-  const openInGoogleUrl = googleMapsSearchUrl(mapQuery);
+  const directionsUrl = useMemo(() => {
+    const build = apple ? appleMapsDirectionsUrl : googleMapsDirectionsUrl;
+    if (spotKind === "campus") return build(BAU_CAMPUS.address);
+    return build(mapQuery, BAU_CAMPUS.address, "walking");
+  }, [apple, spotKind, mapQuery]);
+
+  const openInMapsUrl = apple ? appleMapsSearchUrl(mapQuery) : googleMapsSearchUrl(mapQuery);
+  const mapsAppName = apple ? "Apple Maps" : "Google Maps";
+  // Native shell: plain navigation lets Capacitor hand the URL to the system maps app.
+  const externalLinkProps = native ? {} : { target: "_blank", rel: "noopener noreferrer" };
 
   return (
     <div className="max-w-6xl mx-auto px-4 pt-6 sm:pt-8 relative z-10 pb-8 md:pb-8">
@@ -113,19 +128,17 @@ function MapContent() {
         <div className="flex flex-wrap gap-2">
           <a
             href={directionsUrl}
-            target="_blank"
-            rel="noopener noreferrer"
+            {...externalLinkProps}
             className="inline-flex items-center gap-2 bg-secondary text-primary text-xs font-bold px-4 py-2.5 rounded-2xl"
           >
             <Navigation size={14} /> Directions
           </a>
           <a
-            href={openInGoogleUrl}
-            target="_blank"
-            rel="noopener noreferrer"
+            href={openInMapsUrl}
+            {...externalLinkProps}
             className="inline-flex items-center gap-2 bg-white/10 border border-white/15 text-white text-xs font-bold px-4 py-2.5 rounded-2xl"
           >
-            <ExternalLink size={14} /> Open in Google Maps
+            <ExternalLink size={14} /> Open in {mapsAppName}
           </a>
           <Link
             href="/volunteers"
@@ -233,11 +246,8 @@ function MapContent() {
           </p>
 
           <a
-            href={spotKind === "campus"
-              ? googleMapsDirectionsUrl(BAU_CAMPUS.address)
-              : googleMapsDirectionsUrl(mapQuery, BAU_CAMPUS.address, "walking")}
-            target="_blank"
-            rel="noopener noreferrer"
+            href={directionsUrl}
+            {...externalLinkProps}
             className="text-center bg-primary text-white font-bold text-sm py-2.5 rounded-2xl"
           >
             {spotKind === "campus" ? "Get directions to campus" : "Walk from campus"}

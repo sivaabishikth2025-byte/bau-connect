@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminAuth } from "@/lib/firebase-admin";
 import { mailCard, sendMail } from "@/lib/mail";
+import { toAppActionLink } from "@/lib/authActionLink";
 
 export const runtime = "nodejs";
 
@@ -34,10 +35,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No email on account" }, { status: 400 });
     }
 
-    const link = await adminAuth().generateEmailVerificationLink(email, {
+    const firebaseLink = await adminAuth().generateEmailVerificationLink(email, {
       url: `${appUrl()}/verify-email`,
       handleCodeInApp: false,
     });
+    const link = toAppActionLink(firebaseLink, appUrl());
 
     const subject = "Confirm your BAU Connect account";
     const text = [

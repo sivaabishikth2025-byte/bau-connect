@@ -74,7 +74,7 @@ export const BAU_CAMPUS = {
 export const BUILDING_FLOORS = ["1", "2", "3", "4", "5", "6", "7", "8", "9"] as const;
 
 /** Floors with interactive GLB models in /public/models */
-export const FLOORS_WITH_MODELS = ["1", "2", "3", "4", "6", "7", "8"] as const;
+export const FLOORS_WITH_MODELS = ["1", "2", "3", "4", "6", "7", "8", "9"] as const;
 
 export function hasFloorModel(floor: string) {
   return (FLOORS_WITH_MODELS as readonly string[]).includes(floor);
