@@ -80,7 +80,7 @@ export default function FullProfile() {
 
   return (
     <div className="min-h-screen bg-gray-50 app-bottom-pad">
-      <div className="fixed top-4 left-4 z-20">
+      <div className="fixed left-4 z-20" style={{ top: "calc(1rem + env(safe-area-inset-top, 0px))" }}>
         <button onClick={() => router.back()}
           className="bg-white/90 backdrop-blur rounded-full p-2.5 shadow-md hover:bg-white transition">
           <ArrowLeft size={20} className="text-primary" />

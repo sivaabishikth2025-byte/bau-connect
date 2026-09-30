@@ -224,7 +224,7 @@ export default function Landing() {
           .stats-strip > div{grid-template-columns:repeat(4,minmax(0,1fr)) !important;max-width:960px !important;}
         }
         @media (max-width:767px){
-          .bau nav{padding:12px 16px !important;gap:12px !important;min-height:64px !important;grid-template-columns:1fr auto !important;}
+          .bau nav{padding:max(12px, env(safe-area-inset-top, 0px)) 16px 12px !important;gap:12px !important;min-height:64px !important;grid-template-columns:1fr auto !important;}
           .bau nav ul{display:none !important;}
           .bau .bg{padding:10px 18px;font-size:10px;}
           .bau .bc,.bau .bgh{padding:14px 22px;font-size:11px;letter-spacing:.12em;}
