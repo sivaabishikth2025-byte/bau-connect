@@ -256,7 +256,7 @@ export default function AdminPage() {
       <div className="max-w-4xl mx-auto px-4 pt-8 relative z-10">
         <p className="text-[11px] font-bold uppercase tracking-widest text-secondary mb-1">Staff only</p>
         <h1 className="text-3xl font-black text-white flex items-center gap-2 mb-1"><Shield size={26} /> Admin</h1>
-        <p className="text-white/50 text-sm mb-5">Volunteer hiring, hours, and campus reports.</p>
+        <p className="text-white/50 text-sm mb-5">Volunteer hiring, hours, and campus reports.</p><Link href="/admin/safety" className="inline-block bg-white text-primary rounded-xl px-4 py-3 mb-5 font-bold">Safety reports & account deletion requests</Link>
 
         <div className="flex gap-2 overflow-x-auto pb-3 mb-5 scrollbar-hide">
           {tabs.map(t => (

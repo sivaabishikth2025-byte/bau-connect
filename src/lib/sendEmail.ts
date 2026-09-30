@@ -1,5 +1,5 @@
 import { doc, getDoc } from "firebase/firestore";
-import { db } from "./firebase";
+import { auth, db } from "./firebase";
 
 export type EmailType =
   | "like"
@@ -33,9 +33,11 @@ export async function sendEmailToAddress(
   const recipients = (Array.isArray(to) ? to : [to]).filter(Boolean);
   if (!recipients.length) return;
 
+  if (!auth.currentUser) return;
+  const token = await auth.currentUser.getIdToken();
   await fetch("/api/email", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
     body: JSON.stringify({
       to: recipients,
       type: opts.type,

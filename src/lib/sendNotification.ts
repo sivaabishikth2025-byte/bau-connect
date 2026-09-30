@@ -1,5 +1,5 @@
 import { doc, getDoc } from "firebase/firestore";
-import { db } from "./firebase";
+import { auth, db } from "./firebase";
 
 // Send a push notification to a user via their FCM token
 export async function sendPushNotification(
@@ -9,16 +9,14 @@ export async function sendPushNotification(
   url: string = "/"
 ) {
   try {
-    const snap = await getDoc(doc(db, "users", toUserId));
-    if (!snap.exists()) return;
-    const fcmToken = snap.data().fcmToken;
-    if (!fcmToken) return;
+    if (!auth.currentUser) return;
+    const token = await auth.currentUser.getIdToken();
 
     // Use FCM HTTP v1 API via a Next.js API route
     await fetch("/api/notify", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ fcmToken, title, body, url })
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ toUserId, title, body, url })
     });
   } catch (e) {
     console.error("sendPushNotification error:", e);

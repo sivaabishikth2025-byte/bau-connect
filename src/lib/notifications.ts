@@ -1,5 +1,5 @@
 import { getMessaging, getToken, onMessage } from "firebase/messaging";
-import { doc, updateDoc } from "firebase/firestore";
+import { doc, setDoc } from "firebase/firestore";
 import { auth, db } from "./firebase";
 import { getApps } from "firebase/app";
 
@@ -44,7 +44,7 @@ export async function requestNotificationPermission(): Promise<boolean> {
     });
 
     if (token && auth.currentUser) {
-      await updateDoc(doc(db, "users", auth.currentUser.uid), { fcmToken: token });
+      await setDoc(doc(db, "users", auth.currentUser.uid, "private", "notifications"), { fcmToken: token });
       console.log("FCM token saved");
     }
     return true;

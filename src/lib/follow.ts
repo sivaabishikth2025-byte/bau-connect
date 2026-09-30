@@ -3,6 +3,7 @@ import {
 } from "firebase/firestore";
 import { db } from "./firebase";
 import { notifyUser } from "./inbox";
+import { safetyRequest } from "./safety";
 import { APP_NAME } from "./constants";
 
 export async function findMatchId(userA: string, userB: string) {
@@ -58,10 +59,6 @@ export async function sendFollowRequest(opts: {
 export async function ensureMatch(userA: string, userB: string) {
   const existing = await findMatchId(userA, userB);
   if (existing) return existing;
-  const ref = await addDoc(collection(db, "matches"), {
-    user1Id: userA,
-    user2Id: userB,
-    createdAt: serverTimestamp(),
-  });
-  return ref.id;
+  const result = await safetyRequest("/api/connections", { otherId: userB });
+  return result.matchId as string;
 }

@@ -12,6 +12,7 @@ import { ACTIVITY_TYPES, CAMPUS_LOCATIONS, APP_NAME } from "@/lib/constants";
 import { Activity } from "@/types";
 import FeedPost from "@/components/FeedPost";
 import { Plus, X } from "lucide-react";
+import { contentAllowed } from "@/lib/safety";
 import { notifyAllUsers } from "@/lib/inbox";
 
 export default function ActivitiesPage() {
@@ -59,6 +60,7 @@ export default function ActivitiesPage() {
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !profile) return;
+    if (!contentAllowed(title + " " + description)) { window.alert("Please remove offensive language before posting."); return; }
     setSubmitting(true);
     try {
       const when = whenLocal ? Timestamp.fromDate(new Date(whenLocal)) : null;

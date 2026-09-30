@@ -12,15 +12,19 @@ import { format } from "date-fns";
 import { ArrowLeft, Send, Check, CheckCheck } from "lucide-react";
 import Link from "next/link";
 import { notifyUser } from "@/lib/inbox";
+import SafetyActions from "@/components/SafetyActions";
+import { contentAllowed } from "@/lib/safety";
 import { sendEmailNotification } from "@/lib/sendEmail";
 
 export default function Chat() {
   const { matchId } = useParams<{ matchId: string }>();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
+  const [error, setError] = useState("");
   const router = useRouter();
   const [messages, setMessages] = useState<Message[]>([]);
   const [text, setText] = useState("");
   const [otherUser, setOtherUser] = useState<UserProfile | null>(null);
+  const blocked = profile?.blockedUsers?.includes(otherUser?.uid || "") || otherUser?.blockedUsers?.includes(user?.uid || "") || (otherUser as any)?.hidden;
   const bottomRef = useRef<HTMLDivElement>(null);
   const historyReady = useRef(false);
 
@@ -30,6 +34,7 @@ export default function Chat() {
       const snap = await getDoc(doc(db, "matches", matchId));
       if (!snap.exists()) return;
       const m = snap.data();
+      if (![m.user1Id, m.user2Id].includes(user.uid)) { setError("This conversation is unavailable."); return; }
       const otherId = m.user1Id === user.uid ? m.user2Id : m.user1Id;
       const uSnap = await getDoc(doc(db, "users", otherId));
       setOtherUser(uSnap.data() as UserProfile);
@@ -55,22 +60,24 @@ export default function Chat() {
           });
         }
       });
-    });
+    }, () => setError("This conversation is unavailable."));
   }, [matchId, user]);
 
   const send = async (e: React.FormEvent) => {
     e.preventDefault();
     const trimmed = text.trim();
-    if (!trimmed) return;
+    if (!trimmed || !user || blocked) return;
+    if (!contentAllowed(trimmed)) { setError("Please remove offensive language before sending."); return; }
+    setError("");
     setText("");
 
     const fromName = user!.displayName || "Someone";
 
-    await addDoc(collection(db, "messages"), {
+    try { await addDoc(collection(db, "messages"), {
       matchId, senderId: user!.uid, text: trimmed,
       createdAt: serverTimestamp(),
       seenBy: [user!.uid]
-    });
+    }); } catch { setText(trimmed); setError("Unable to send. The conversation may be blocked or unavailable."); return; }
 
     if (otherUser) {
       const isFirstMessage = historyReady.current && messages.length === 0;
@@ -118,6 +125,8 @@ export default function Chat() {
         )}
       </div>
 
+      {otherUser && <div className="bg-white px-4"><SafetyActions userId={otherUser.uid} /></div>}
+      {(error || blocked) && <p role="status" className="p-4 text-red-700">{blocked ? "This user is blocked. Messaging is disabled." : error}</p>}
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3 overscroll-contain">
         {messages.length === 0 && (
@@ -125,7 +134,7 @@ export default function Chat() {
             Say hi to {otherUser?.name} 👋
           </p>
         )}
-        {messages.map((m, i) => {
+        {messages.filter(m => !(m as any).hidden).map((m, i) => {
           const isMe = m.senderId === user!.uid;
           const isLast = i === messages.length - 1;
           const isSeen = m.seenBy?.includes(otherUser?.uid || "");
@@ -137,6 +146,7 @@ export default function Chat() {
                 }`}>
                   {m.text}
                 </div>
+                {!isMe && <SafetyActions userId={m.senderId} kind="message" targetId={m.id} />}
                 <div className={`flex items-center gap-1 mt-1 ${isMe ? "justify-end" : "justify-start"}`}>
                   {m.createdAt && (
                     <p className="text-xs text-gray-400">
@@ -162,6 +172,8 @@ export default function Chat() {
         className="bg-white border-t border-gray-100 px-4 py-3 flex items-center gap-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
       >
         <input
+          disabled={!!blocked}
+          maxLength={4000}
           value={text}
           onChange={e => setText(e.target.value)}
           placeholder="Type a message..."

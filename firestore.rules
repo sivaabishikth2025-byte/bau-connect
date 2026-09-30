@@ -1,0 +1,101 @@
+rules_version = '2';
+// Prototype rules for the existing Standard Firestore model. All IDs are document IDs.
+// users: uid/email/createdAt immutable; owner profile fields (name<=120,bio<=2000,age number,photos/gallery lists); hidden server-only.
+// inbox: fromUserId sender UID, title/body/url strings, read bool, createdAt timestamp.
+// activities: authorId immutable; title<=200,description<=4000; participantIds/likedBy lists; createdAt immutable.
+// comments: authorId immutable; text<=2000,createdAt timestamp.
+// likes: fromUserId/toUserId immutable strings,createdAt timestamp.
+// matches: server-created user1Id/user2Id strings,createdAt timestamp.
+// messages: matchId/senderId/text/createdAt immutable,seenBy participant UIDs; hidden server-only.
+// volunteers: organizerId immutable; title/description/requirements strings,hours/spots numbers,participantIds list,status string.
+// applications: applicantId/jobId immutable; applicantEmail,phone,availability,why strings; status staff-controlled.
+// hour logs: userId/jobId immutable; hours number,date/comment strings.
+// safetyReports/accountDeletionRequests: server-only, API validates reporter/requester and staff.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function campus() { return signedIn() && request.auth.token.email_verified == true && request.auth.token.email.matches('.*@(stu\\.)?bau\\.edu'); }
+    function staff() { return campus() && request.auth.token.email in ['smylavarapu@stu.bau.edu','rmckie@bau.edu','cthinkratok@bau.edu','ratchata@bau.edu']; }
+    function owner(uid) { return signedIn() && request.auth.uid == uid; }
+    function text(s,n) { return s is string && s.size() <= n; }
+    function clean(s) { return !s.lower().matches('.*\\b(fuck|fucking|shit|bitch|cunt|nigger|faggot)\\b.*'); }
+    function active(uid) { return exists(/databases/$(database)/documents/users/$(uid)) && get(/databases/$(database)/documents/users/$(uid)).data.get('hidden', false) != true; }
+    function unblocked(a,b) { return active(a) && active(b) && !(b in get(/databases/$(database)/documents/users/$(a)).data.get('blockedUsers', [])) && !(a in get(/databases/$(database)/documents/users/$(b)).data.get('blockedUsers', [])); }
+    function meActive() { return campus() && active(request.auth.uid); }
+    function same(field) { return request.resource.data[field] == resource.data[field]; }
+    function ownListChange(field) {
+      let before = resource.data.get(field, []);
+      let after = request.resource.data.get(field, []);
+      return after is list && after.size() <= 5000 && after.toSet().difference(before.toSet()).hasOnly([request.auth.uid]) && before.toSet().difference(after.toSet()).hasOnly([request.auth.uid]);
+    }
+    function validProfile(d) { return d.keys().hasAll(['uid','email','name','age','major','university','bio','interests','photoURL','photos','gallery','blockedUsers','createdAt']) && text(d.uid,128) && text(d.email,254) && text(d.name,120) && d.age is number && d.age >= 0 && d.age <= 120 && text(d.major,200) && text(d.university,200) && text(d.bio,2000) && clean(d.bio) && d.interests is list && d.interests.size() <= 100 && d.photos is list && d.photos.size() <= 6 && d.gallery is list && d.gallery.size() <= 100 && d.blockedUsers is list && d.blockedUsers.size() <= 5000 && text(d.photoURL,2000) && d.createdAt is timestamp; }
+    match /users/{uid} {
+      allow read: if campus() || owner(uid);
+      allow create: if campus() && owner(uid) && validProfile(request.resource.data) && request.resource.data.keys().hasOnly(['uid','email','name','age','gender','major','university','bio','interests','openTo','photoURL','photos','gallery','blockedUsers','createdAt']) && request.resource.data.uid == uid && request.resource.data.email == request.auth.token.email && request.resource.data.createdAt == request.time && request.resource.data.blockedUsers.size() == 0;
+      allow update: if campus() && owner(uid) && active(uid) && validProfile(request.resource.data) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['bio','major','interests','openTo','photoURL','photos','gallery','blockedUsers','name','gender','age']) && same('uid') && same('email') && same('createdAt');
+      match /inbox/{id} {
+        function valid(d) { return d.keys().hasAll(['type','title','body','url','read','createdAt','fromUserId']) && text(d.type,40) && text(d.title,200) && text(d.body,4000) && text(d.url,2000) && d.read is bool && d.createdAt is timestamp; }
+        allow read: if owner(uid) && campus();
+        allow create: if meActive() && valid(request.resource.data) && request.resource.data.keys().hasOnly(['type','title','body','url','read','createdAt','fromUserId','fromName','email']) && request.resource.data.fromUserId == request.auth.uid && request.resource.data.read == false && request.resource.data.createdAt == request.time && unblocked(request.auth.uid,uid) && (request.resource.data.type != 'alert' || staff());
+        allow update: if owner(uid) && campus() && valid(request.resource.data) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']);
+        allow delete: if owner(uid) && campus();
+      }
+      match /private/{id} {
+        function valid(d) { return d.keys().hasOnly(['fcmToken']) && text(d.fcmToken,4096); }
+        allow read: if id == "notifications" && campus() && owner(uid);
+        allow create, update: if id == "notifications" && campus() && owner(uid) && valid(request.resource.data);
+      }
+    }
+    match /activities/{id} {
+      function valid(d) { return d.keys().hasAll(['authorId','authorName','type','title','description','participantIds','createdAt']) && text(d.authorId,128) && text(d.authorName,120) && text(d.type,40) && text(d.title,200) && text(d.description,4000) && clean(d.title) && clean(d.description) && d.participantIds is list && d.participantIds.size() <= 5000 && d.get('likedBy',[]) is list && d.get('likedBy',[]).size() <= 5000 && d.createdAt is timestamp; }
+      allow read: if campus();
+      allow create: if meActive() && valid(request.resource.data) && request.resource.data.keys().hasOnly(['authorId','authorName','authorPhoto','type','title','description','location','campusSpotId','when','spots','participantIds','likedBy','createdAt']) && request.resource.data.authorId == request.auth.uid && request.resource.data.createdAt == request.time && request.resource.data.participantIds.hasOnly([request.auth.uid]) && request.resource.data.get('likedBy',[]).size() == 0;
+      allow update: if meActive() && valid(request.resource.data) && same('authorId') && same('createdAt') && ((resource.data.authorId == request.auth.uid || staff()) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['title','description','type','location','campusSpotId','when','spots','updatedAt']) || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['participantIds','likedBy']) && ownListChange('participantIds') && ownListChange('likedBy'));
+      allow delete: if meActive() && (resource.data.authorId == request.auth.uid || staff());
+      match /comments/{comment} {
+        function valid(d) { return d.keys().hasAll(['authorId','authorName','text','createdAt']) && text(d.authorId,128) && text(d.authorName,120) && text(d.text,2000) && clean(d.text) && d.createdAt is timestamp; }
+        allow read: if campus();
+        allow create: if meActive() && valid(request.resource.data) && request.resource.data.keys().hasOnly(['authorId','authorName','authorPhoto','text','createdAt']) && request.resource.data.authorId == request.auth.uid && request.resource.data.createdAt == request.time && exists(/databases/$(database)/documents/activities/$(id));
+        allow delete: if meActive() && (resource.data.authorId == request.auth.uid || staff());
+      }
+    }
+    match /likes/{id} {
+      function valid(d) { return d.keys().hasOnly(['fromUserId','toUserId','createdAt']) && text(d.fromUserId,128) && text(d.toUserId,128) && d.createdAt is timestamp; }
+      allow read, delete: if campus() && request.auth.uid in [resource.data.fromUserId,resource.data.toUserId];
+      allow create: if meActive() && valid(request.resource.data) && request.resource.data.fromUserId == request.auth.uid && request.resource.data.toUserId != request.auth.uid && request.resource.data.createdAt == request.time && unblocked(request.auth.uid,request.resource.data.toUserId);
+    }
+    match /matches/{id} {
+      allow read, delete: if campus() && request.auth.uid in [resource.data.user1Id,resource.data.user2Id];
+    }
+    function participant(matchId) { let m = get(/databases/$(database)/documents/matches/$(matchId)).data; return campus() && request.auth.uid in [m.user1Id,m.user2Id]; }
+    function canMessage(matchId) { let m = get(/databases/$(database)/documents/matches/$(matchId)).data; return participant(matchId) && unblocked(m.user1Id,m.user2Id); }
+    match /messages/{id} {
+      function valid(d) { return d.keys().hasAll(['matchId','senderId','text','createdAt','seenBy']) && text(d.matchId,260) && text(d.senderId,128) && text(d.text,4000) && clean(d.text) && d.createdAt is timestamp && d.seenBy is list && d.seenBy.size() <= 2; }
+      allow read: if participant(resource.data.matchId);
+      allow create: if meActive() && valid(request.resource.data) && request.resource.data.keys().hasOnly(['matchId','senderId','text','createdAt','seenBy']) && request.resource.data.senderId == request.auth.uid && request.resource.data.createdAt == request.time && request.resource.data.seenBy == [request.auth.uid] && canMessage(request.resource.data.matchId);
+      allow update: if meActive() && valid(request.resource.data) && participant(resource.data.matchId) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['seenBy']) && ownListChange('seenBy');
+    }
+    match /volunteers/{id} {
+      function valid(d) { return d.keys().hasAll(['title','description','organizerId','participantIds','status','createdAt']) && text(d.title,200) && text(d.description,4000) && text(d.get('requirements',''),4000) && text(d.organizerId,128) && d.participantIds is list && d.participantIds.size() <= 5000 && d.status in ['active','closed'] && d.createdAt is timestamp; }
+      allow read: if campus();
+      allow create: if staff() && valid(request.resource.data) && request.resource.data.organizerId == request.auth.uid && request.resource.data.createdAt == request.time;
+      allow update: if staff() && valid(request.resource.data) && same('organizerId') && same('createdAt');
+      allow delete: if staff();
+    }
+    match /volunteerApplications/{id} {
+      function valid(d) { return d.keys().hasAll(['jobId','applicantId','applicantEmail','phone','availability','why','status','createdAt','updatedAt']) && text(d.jobId,128) && text(d.applicantId,128) && text(d.applicantEmail,254) && text(d.phone,40) && text(d.availability,4000) && text(d.why,4000) && text(d.get('experience',''),4000) && text(d.get('roleNotes',''),4000) && text(d.get('adminNotes',''),4000) && d.status in ['applied','reviewing','hired','waitlisted','declined','withdrawn'] && d.createdAt is timestamp && d.updatedAt is timestamp; }
+      allow read: if campus() && (staff() || resource.data.applicantId == request.auth.uid);
+      allow create: if meActive() && valid(request.resource.data) && request.resource.data.keys().hasOnly(['jobId','jobTitle','applicantId','applicantName','applicantEmail','applicantPhoto','phone','major','year','availability','why','experience','resumeURL','resumeName','roleNotes','status','adminNotes','createdAt','updatedAt']) && request.resource.data.applicantId == request.auth.uid && request.resource.data.applicantEmail == request.auth.token.email && request.resource.data.status == 'applied' && request.resource.data.adminNotes == '' && request.resource.data.createdAt == request.time && exists(/databases/$(database)/documents/volunteers/$(request.resource.data.jobId));
+      allow update: if campus() && valid(request.resource.data) && same('applicantId') && same('jobId') && same('createdAt') && (staff() || resource.data.applicantId == request.auth.uid && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['roleNotes','updatedAt','status']) && (same('status') || request.resource.data.status == 'withdrawn'));
+      allow delete: if staff();
+    }
+    match /volunteerHourLogs/{id} {
+      function valid(d) { return d.keys().hasAll(['userId','jobId','date','hours','comment','createdAt','updatedAt']) && text(d.userId,128) && text(d.jobId,128) && text(d.date,10) && d.hours is number && d.hours >= 0 && d.hours <= 24 && text(d.comment,4000) && d.createdAt is timestamp && d.updatedAt is timestamp; }
+      allow read: if campus() && (staff() || resource.data.userId == request.auth.uid);
+      allow create: if meActive() && valid(request.resource.data) && request.resource.data.keys().hasOnly(['userId','userName','jobId','jobTitle','date','hours','comment','createdAt','updatedAt']) && request.resource.data.userId == request.auth.uid && request.resource.data.createdAt == request.time;
+      allow update: if campus() && valid(request.resource.data) && same('userId') && same('jobId') && same('createdAt') && (staff() || resource.data.userId == request.auth.uid);
+      allow delete: if campus() && (staff() || resource.data.userId == request.auth.uid);
+    }
+    match /{document=**} { allow read, write: if false; }
+  }
+}

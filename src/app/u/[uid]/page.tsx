@@ -8,6 +8,7 @@ import { UserProfile } from "@/types";
 import { ArrowLeft, MapPin, UserPlus, MessageCircle } from "lucide-react";
 import { findFollowRequest, findMatchId, sendFollowRequest } from "@/lib/follow";
 import Link from "next/link";
+import SafetyActions from "@/components/SafetyActions";
 
 export default function FullProfile() {
   const { uid } = useParams<{ uid: string }>();
@@ -20,6 +21,7 @@ export default function FullProfile() {
   const [followState, setFollowState] = useState<"none" | "requested" | "following">("none");
   const [matchId, setMatchId] = useState<string | null>(null);
 
+  const blocked = myProfile?.blockedUsers?.includes(uid) || profile?.blockedUsers?.includes(user?.uid || "");
   const isSelf = !!user && user.uid === uid;
 
   useEffect(() => {
@@ -45,7 +47,7 @@ export default function FullProfile() {
   }, [user, uid]);
 
   const handleFollow = async () => {
-    if (!user || !myProfile || !profile || acting || isSelf) return;
+    if (!user || !myProfile || !profile || acting || isSelf || blocked) return;
     setActing(true);
     const result = await sendFollowRequest({
       fromUserId: user.uid,
@@ -73,6 +75,7 @@ export default function FullProfile() {
     </div>
   );
 
+  if (blocked || (profile as any).hidden) return <main className="p-6"><Link href="/dashboard">Back to campus</Link><p className="py-4">This profile is unavailable.</p><SafetyActions userId={uid} /></main>;
   const photos = profile.photos?.length ? profile.photos : [profile.photoURL];
 
   return (
@@ -113,6 +116,7 @@ export default function FullProfile() {
 
       <div className="max-w-lg mx-auto px-4 -mt-6 relative z-10">
         <div className="bg-white rounded-3xl shadow-xl p-6 space-y-5">
+          <SafetyActions userId={uid} />
           {profile.openTo && profile.openTo.length > 0 && (
             <div>
               <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Open to</p>
