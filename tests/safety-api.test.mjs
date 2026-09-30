@@ -68,7 +68,7 @@ test('deletion request uses authenticated identity, requires confirmation, and c
   assert.equal((await request('/api/account/deletion?staff=1','bob',undefined,'GET')).status,403);
   assert.equal((await request('/api/account/deletion/process','bob',{uid:'alice',confirm:'DELETE'})).status,403);
   // Refuse an unapproved legacy asset before disabling or deleting anyone.
-  await db.doc("users/alice").update({photoURL:"https://res.cloudinary.com/dugaqcyt0/image/upload/v1/legacy.jpg"});
+  await db.doc("users/alice").update({photoURL:"https://res.cloudinary.com/example-cloud/image/upload/v1/legacy.jpg"});
   assert.equal((await request('/api/account/deletion/process','staff',{uid:'alice',confirm:'DELETE'})).status,409);
   assert.equal((await auth.getUser('alice')).disabled,false);
   assert.equal((await db.doc('users/alice').get()).exists,true);
