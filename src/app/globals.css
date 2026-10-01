@@ -29,6 +29,17 @@ body {
   height: calc(100dvh - env(safe-area-inset-top, 0px));
 }
 
+/* Scrolled cards and dialogs must not show through the status-bar region. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0 0 auto;
+  height: env(safe-area-inset-top, 0px);
+  background: #1C2D5A;
+  z-index: 1000;
+  pointer-events: none;
+}
+
 html,
 button,
 input,
