@@ -71,7 +71,7 @@ export default function Chat() {
     setError("");
     setText("");
 
-    const fromName = user!.displayName || "Someone";
+    const fromName = profile?.name?.trim() || user.displayName?.trim() || "A classmate";
 
     try { await addDoc(collection(db, "messages"), {
       matchId, senderId: user!.uid, text: trimmed,
