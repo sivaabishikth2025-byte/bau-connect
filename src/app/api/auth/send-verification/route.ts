@@ -62,9 +62,13 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ ok: true, messageId });
   } catch (e: unknown) {
-    const message = e instanceof Error ? e.message : "Failed to send verification email";
-    console.error("send-verification error:", e);
-    const status = /too-many|rate|quota/i.test(message) ? 429 : 500;
-    return NextResponse.json({ error: message }, { status });
+    const code = e && typeof e === "object" && "code" in e ? String(e.code) : "unknown";
+    console.error("Verification email failed", code);
+    const limited = /too-many|quota/i.test(code);
+    return NextResponse.json({
+      error: limited
+        ? "Please wait a few minutes before requesting another verification email."
+        : "We couldn't send your verification email right now. Please try again later.",
+    }, { status: limited ? 429 : 503 });
   }
 }
