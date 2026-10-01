@@ -21,6 +21,7 @@ export default function Dashboard() {
   const [index, setIndex] = useState(0);
   const [photoIndex, setPhotoIndex] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
   const [connectMsg, setConnectMsg] = useState("");
   const [swipeDir, setSwipeDir] = useState<"left" | "right" | null>(null);
   const [showFilter, setShowFilter] = useState(false);
@@ -46,32 +47,36 @@ export default function Dashboard() {
     }
   }, [profile, authLoading]);
 
-  const loadUsers = async (openToFilter: string) => {
+  const loadUsers = async (_openToFilter: string) => {
     setLoading(true);
+    setLoadError("");
     setIndex(0);
     setPhotoIndex(0);
-    const likesSnap = await getDocs(
-      query(collection(db, "likes"), where("fromUserId", "==", user!.uid))
-    );
+    try {
+    const [likesSnap, snap] = await Promise.all([
+      getDocs(query(collection(db, "likes"), where("fromUserId", "==", user!.uid))),
+      getDocs(collection(db, "users")),
+    ]);
     const likedIds = likesSnap.docs.map(d => d.data().toUserId);
     const excluded = new Set([user!.uid, ...likedIds, ...(profile?.blockedUsers || [])]);
-    const snap = await getDocs(collection(db, "users"));
-    let all = snap.docs.map(d => d.data() as UserProfile).filter(u => !excluded.has(u.uid) && !u.blockedUsers?.includes(user!.uid) && !(u as any).hidden);
-    if (openToFilter !== "Everyone") {
-      all = all.filter(u => u.openTo?.includes(openToFilter));
-    }
+    const all = snap.docs.map(d => d.data() as UserProfile).filter(u => !excluded.has(u.uid) && !u.blockedUsers?.includes(user!.uid) && !(u as any).hidden);
     setUsers(all);
+    } catch {
+      setLoadError("Couldn’t load classmates. Please try again.");
+    } finally {
     setLoading(false);
+    }
   };
 
   const applyFilter = (value: string) => {
     setFilterOpenTo(value);
     setShowFilter(false);
-    loadUsers(value);
+    setIndex(0);
+    setPhotoIndex(0);
   };
 
   const handleConnect = async () => {
-    const target = users[index];
+    const target = displayUser;
     if (!target || !user || !profile) return;
     setSwipeDir("right");
     setTimeout(() => { setSwipeDir(null); setPhotoIndex(0); }, 400);
@@ -96,16 +101,17 @@ export default function Dashboard() {
     setIndex(i => i + 1);
   };
 
-  const current = users[index];
+  const filteredUsers = filterOpenTo === "Everyone" ? users : users.filter(u => u.openTo?.includes(filterOpenTo));
+  const current = filteredUsers[index];
 
   const searchedUsers = search.trim()
-    ? users.filter(u =>
+    ? filteredUsers.filter(u =>
         u.name.toLowerCase().includes(search.toLowerCase()) ||
         u.major.toLowerCase().includes(search.toLowerCase()) ||
         u.interests?.some(i => i.toLowerCase().includes(search.toLowerCase())) ||
         u.openTo?.some(i => i.toLowerCase().includes(search.toLowerCase()))
       )
-    : users;
+    : filteredUsers;
   const displayUser = search.trim() ? searchedUsers[0] : current;
   const displayPhotos = displayUser?.photos?.length ? displayUser.photos : displayUser ? [displayUser.photoURL] : [];
 
@@ -203,6 +209,11 @@ export default function Dashboard() {
         {loading ? (
           <div className="flex justify-center pt-20">
             <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+          </div>
+        ) : loadError ? (
+          <div role="alert" className="text-center py-10 text-white">
+            <p>{loadError}</p>
+            <button onClick={() => loadUsers(filterOpenTo)} className="mt-4 bg-primary px-6 py-3 rounded-2xl">Try again</button>
           </div>
         ) : !displayUser ? (
           <div className="text-center pt-16 bg-white/5 rounded-3xl border border-white/10 p-10">

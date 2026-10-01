@@ -107,9 +107,9 @@ export default function Chat() {
   };
 
   return (
-    <div className="flex flex-col h-[100dvh] bg-gray-50">
+    <div className="flex flex-col chat-viewport bg-gray-50">
       {/* Header */}
-      <div className="bg-white border-b border-gray-100 px-4 py-3 sm:py-4 flex items-center gap-3 shadow-sm pt-[max(0.75rem,env(safe-area-inset-top))]">
+      <div className="bg-white border-b border-gray-100 px-4 py-3 sm:py-4 flex items-center gap-3 shadow-sm">
         <button onClick={() => router.back()} className="text-primary hover:opacity-70 transition shrink-0 p-1 -ml-1">
           <ArrowLeft size={22} />
         </button>
