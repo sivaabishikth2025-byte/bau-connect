@@ -10,7 +10,12 @@ export async function requireUser(req: NextRequest, staff = false) {
   if (!token) throw new ApiError(401, "Please sign in again.");
   let user;
   try { user = await adminAuth().verifyIdToken(token, true); }
-  catch { throw new ApiError(401, "Please sign in again."); }
+  catch (error) {
+    // Log only the SDK error code, never the token or service-account contents.
+    const code = error && typeof error === "object" && "code" in error ? String(error.code) : "unknown";
+    console.error("Firebase authentication verification failed", code);
+    throw new ApiError(401, "Please sign in again.");
+  }
   if (!user.email || !/^[^@]+@(stu\.)?bau\.edu$/i.test(user.email)) throw new ApiError(403, "A BAU account is required.");
   if (!user.email_verified) throw new ApiError(403, "Verify your BAU email first.");
   if (staff && !isAdminEmail(user.email)) throw new ApiError(403, "Staff access required.");
