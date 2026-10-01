@@ -8,7 +8,8 @@
     "start": "next start",
     "cap:sync": "npx cap sync android",
     "cap:open": "npx cap open android",
-    "cap:assets": "npx capacitor-assets generate --android"
+    "cap:assets": "npx capacitor-assets generate --android",
+    "test:safety": "firebase emulators:exec --only firestore,auth --project demo-bau-connect \"node --test --test-concurrency=1 tests/firestore.rules.test.mjs tests/safety-api.test.mjs\""
   },
   "dependencies": {
     "@capacitor/android": "^8.5.2",
@@ -36,6 +37,7 @@
   "devDependencies": {
     "@capacitor/assets": "^3.0.5",
     "@capacitor/cli": "^8.5.2",
+    "@firebase/rules-unit-testing": "^5.0.2",
     "@types/leaflet": "^1.9.22",
     "@types/node": "^20",
     "@types/react": "^18",

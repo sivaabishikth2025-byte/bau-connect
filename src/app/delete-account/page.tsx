@@ -1,104 +1,30 @@
-import type { Metadata } from "next";
+"use client";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import BauLogo from "@/components/BauLogo";
-
-export const metadata: Metadata = {
-  title: "Delete Your Account | BAU Connect",
-  description: "How to request deletion of your BAU Connect account and associated data.",
-};
-
+import { useAuth } from "@/context/AuthContext";
+import { safetyRequest } from "@/lib/safety";
 export default function DeleteAccountPage() {
-  return (
-    <main className="min-h-screen" style={{ background: "#F4F7FF" }}>
-      <header className="border-b border-gray-200 bg-white">
-        <div className="max-w-3xl mx-auto px-4 py-4 flex items-center justify-between">
-          <Link href="/landing" className="flex items-center">
-            <BauLogo size="nav" />
-          </Link>
-          <Link href="/privacy" className="text-sm font-semibold text-primary hover:underline">
-            Privacy Policy
-          </Link>
-        </div>
-      </header>
-
-      <article className="max-w-3xl mx-auto px-4 py-10 sm:py-14">
-        <p className="text-xs font-bold uppercase tracking-widest text-sky mb-3">BAU Connect</p>
-        <h1 className="text-3xl sm:text-4xl font-black text-primary mb-2">Delete your account</h1>
-        <p className="text-gray-500 text-sm mb-8">
-          Request permanent deletion of your BAU Connect account and associated personal data.
-        </p>
-
-        <div className="space-y-8 text-gray-700 text-[15px] leading-relaxed">
-          <section className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
-            <h2 className="text-xl font-bold text-primary mb-3">How to request deletion</h2>
-            <ol className="list-decimal pl-5 space-y-3">
-              <li>
-                From your BAU email (<strong>@stu.bau.edu</strong> or <strong>@bau.edu</strong>), send a
-                message to{" "}
-                <a className="text-sky font-semibold" href="mailto:techconnect@bau.edu?subject=BAU%20Connect%20account%20deletion%20request">
-                  techconnect@bau.edu
-                </a>
-              </li>
-              <li>
-                Use subject line: <strong>BAU Connect account deletion request</strong>
-              </li>
-              <li>
-                Include the email address of the account you want deleted, and confirm you want the
-                account and associated data removed.
-              </li>
-            </ol>
-            <p className="mt-4">
-              We will process verified requests within a reasonable period (typically within 30 days).
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-xl font-bold text-primary mb-2">What we delete</h2>
-            <ul className="list-disc pl-5 space-y-2">
-              <li>Your profile (name, age, major, bio, interests, photos/gallery)</li>
-              <li>Follow / connection relationships tied to your account</li>
-              <li>Campus feed posts and comments you authored (where feasible)</li>
-              <li>Direct messages associated with your account (where feasible)</li>
-              <li>In-app notification inbox items for your account</li>
-              <li>Authentication account access for BAU Connect</li>
-            </ul>
-          </section>
-
-          <section>
-            <h2 className="text-xl font-bold text-primary mb-2">What we may keep for a limited time</h2>
-            <p>
-              We may retain limited records needed for security, fraud/abuse prevention, legal
-              compliance, or backups, for as long as reasonably necessary. Backups are purged on a
-              rolling schedule and are not used for active product features.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-xl font-bold text-primary mb-2">Without deleting your whole account</h2>
-            <p>
-              While signed in, you can edit or remove much of your profile content yourself (for
-              example bio, interests, and gallery photos) from Profile. For full account removal, use
-              the email request above.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-xl font-bold text-primary mb-2">Contact</h2>
-            <p>
-              <a className="text-sky font-semibold" href="mailto:techconnect@bau.edu">
-                techconnect@bau.edu
-              </a>
-            </p>
-            <p className="mt-3">
-              See also our{" "}
-              <Link href="/privacy" className="text-sky font-semibold">
-                Privacy Policy
-              </Link>
-              .
-            </p>
-          </section>
-        </div>
-      </article>
-    </main>
-  );
+  const { user, loading } = useAuth();
+  const [confirm, setConfirm] = useState("");
+  const [pending, setPending] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState("");
+  useEffect(() => { if (user) safetyRequest("/api/account/deletion", undefined, "GET").then(d => setPending(d.pending)).catch(() => {}); }, [user]);
+  return <main className="min-h-screen bg-gray-50 px-4 py-10"><article className="max-w-lg mx-auto bg-white rounded-3xl p-6 space-y-5">
+    <Link href="/profile" className="text-primary underline">Back to profile</Link>
+    <h1 className="text-3xl font-black text-primary">Delete your account</h1>
+    <p>This permanently removes your BAU Connect login, profile, photos, posts, comments, messages, connections, volunteer applications, uploaded files, and notifications. You will lose access to your account.</p>
+    <p>Campus staff process requests within 30 days. You will receive an email when deletion is complete. Limited records may be retained only when legally required. You do not need to contact support to start deletion.</p>
+    {loading ? <p>Loading...</p> : !user ? <Link href="/login" className="block bg-primary text-white p-3 rounded-xl text-center">Sign in to delete your account</Link> : pending ? <p role="status" className="bg-green-50 p-4 rounded-xl">Your deletion request is recorded. Staff will complete it within 30 days and email you.</p> : <form className="space-y-4" onSubmit={async e => {
+      e.preventDefault(); setBusy(true); setMessage("");
+      try { const data = await safetyRequest("/api/account/deletion", { confirm }); setPending(true); setMessage(data.message); }
+      catch (error) { setMessage(error instanceof Error ? error.message : "Please try again."); }
+      finally { setBusy(false); }
+    }}>
+      <label className="block text-sm font-bold">Type DELETE to confirm permanent deletion<input value={confirm} onChange={e => setConfirm(e.target.value)} autoComplete="off" className="block border rounded-xl p-3 w-full mt-2" /></label>
+      <button disabled={busy || confirm !== "DELETE"} className="bg-red-700 text-white rounded-xl p-3 w-full disabled:opacity-40">{busy ? "Submitting..." : "Request permanent account deletion"}</button>
+    </form>}
+    {message && <p role="status">{message}</p>}
+    <p className="text-sm"><Link href="/privacy" className="underline">Privacy policy</Link> · <a href="mailto:techconnect@bau.edu" className="underline">Support</a></p>
+  </article></main>;
 }

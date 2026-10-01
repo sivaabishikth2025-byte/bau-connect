@@ -56,7 +56,7 @@ export default function Dashboard() {
     const likedIds = likesSnap.docs.map(d => d.data().toUserId);
     const excluded = new Set([user!.uid, ...likedIds, ...(profile?.blockedUsers || [])]);
     const snap = await getDocs(collection(db, "users"));
-    let all = snap.docs.map(d => d.data() as UserProfile).filter(u => !excluded.has(u.uid));
+    let all = snap.docs.map(d => d.data() as UserProfile).filter(u => !excluded.has(u.uid) && !u.blockedUsers?.includes(user!.uid) && !(u as any).hidden);
     if (openToFilter !== "Everyone") {
       all = all.filter(u => u.openTo?.includes(openToFilter));
     }

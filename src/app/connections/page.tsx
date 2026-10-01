@@ -12,6 +12,8 @@ import { AppStarfield, appPageBg } from "@/components/AppShell";
 import Link from "next/link";
 import { MessageCircle, Search, Trash2, UserPlus, Check, X } from "lucide-react";
 import { sendPushNotification } from "@/lib/sendNotification";
+import { safetyRequest } from "@/lib/safety";
+import { findMatchId } from "@/lib/follow";
 import { notifyUser } from "@/lib/inbox";
 
 type Tab = "connected" | "requests";
@@ -59,11 +61,13 @@ function ConnectionsPage() {
       const match = { id: d.id, ...d.data() } as Match;
       const otherId = match.user1Id === user.uid ? match.user2Id : match.user1Id;
       const snap = await getDoc(doc(db, "users", otherId));
+      if (!snap.exists()) return null;
       const otherUser = snap.data() as UserProfile;
+      if (myProfile.blockedUsers?.includes(otherId) || otherUser.blockedUsers?.includes(user.uid) || (otherUser as any).hidden) return null;
       const shared = myProfile.interests?.filter(i => otherUser.interests?.includes(i)).length ?? 0;
       return { ...match, otherUser, sharedInterests: shared };
     }));
-    setMatches(enriched);
+    setMatches(enriched.filter((m): m is MatchWithUser => m !== null));
   };
 
   const loadRequests = async () => {
@@ -82,7 +86,7 @@ function ConnectionsPage() {
     const entries = await Promise.all(
       likedMeSnap.docs.map(async d => {
         const fromId = d.data().fromUserId;
-        if (matchedIds.has(fromId)) return null;
+        if (matchedIds.has(fromId) || myProfile?.blockedUsers?.includes(fromId)) return null;
         const snap = await getDoc(doc(db, "users", fromId));
         if (!snap.exists()) return null;
         return { docId: d.id, user: snap.data() as UserProfile };
@@ -118,15 +122,9 @@ function ConnectionsPage() {
     await addDoc(collection(db, "likes"), {
       fromUserId: user.uid, toUserId: entry.user.uid, createdAt: serverTimestamp()
     });
-    const existing = await getDocs(query(
-      collection(db, "matches"),
-      where("user1Id", "in", [user.uid, entry.user.uid]),
-      where("user2Id", "in", [user.uid, entry.user.uid])
-    ));
-    if (existing.empty) {
-      await addDoc(collection(db, "matches"), {
-        user1Id: user.uid, user2Id: entry.user.uid, createdAt: serverTimestamp()
-      });
+    const existing = await findMatchId(user.uid, entry.user.uid);
+    if (!existing) {
+      await safetyRequest("/api/connections", { otherId: entry.user.uid });
       sendPushNotification(entry.user.uid, "Follow request accepted",
         `${myProfile.name} accepted your follow request on BAU Connect`, "/connections");
       await notifyUser(entry.user.uid, {

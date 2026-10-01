@@ -1,7 +1,22 @@
+import { requireUser, apiError, ApiError } from "@/lib/server-auth";
+import { adminDb } from "@/lib/firebase-admin";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
-  const { fcmToken, title, body, url } = await req.json();
+  let fcmToken: string | undefined;
+  let title: string, body: string, url: string;
+  try {
+    const user = await requireUser(req);
+    const data = await req.json();
+    if (typeof data.toUserId !== "string" || !/^[\w-]{1,128}$/.test(data.toUserId) || typeof data.title !== "string" || data.title.length > 200 || typeof data.body !== "string" || data.body.length > 4000 || typeof data.url !== "string" || !data.url.startsWith("/") || data.url.startsWith("//")) throw new ApiError(400, "Invalid notification.");
+    const recipient = await adminDb().doc(`users/${data.toUserId}`).get();
+    const sender = await adminDb().doc(`users/${user.uid}`).get();
+    if (!recipient.exists || !sender.exists || recipient.data()?.hidden || sender.data()?.hidden || recipient.data()?.blockedUsers?.includes(user.uid) || sender.data()?.blockedUsers?.includes(data.toUserId)) throw new ApiError(403, "Notification unavailable.");
+    const privateData = await adminDb().doc(`users/${data.toUserId}/private/notifications`).get();
+    fcmToken = privateData.data()?.fcmToken || recipient.data()?.fcmToken;
+    if (!fcmToken) return NextResponse.json({ ok: true, skipped: true });
+    ({ title, body, url } = data);
+  } catch (error) { return apiError(error); }
 
   if (!fcmToken || !title || !body) {
     return NextResponse.json({ error: "Missing fields" }, { status: 400 });
@@ -37,10 +52,10 @@ export async function POST(req: NextRequest) {
       }
     );
 
-    const data = await res.json();
-    return NextResponse.json(data);
-  } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 500 });
+    if (!res.ok) return NextResponse.json({ error: "Notification delivery unavailable." }, { status: 503 });
+    return NextResponse.json({ ok: true });
+  } catch {
+    return NextResponse.json({ error: "Notification delivery unavailable." }, { status: 503 });
   }
 }
 

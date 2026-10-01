@@ -1,7 +1,7 @@
 "use client";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  addDoc, collection, deleteDoc, doc, getDocs, serverTimestamp, updateDoc
+  addDoc, collection, deleteDoc, doc, getDocs, query, where, serverTimestamp, updateDoc
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
@@ -53,12 +53,13 @@ export default function VolunteersPage() {
   const [roleNotes, setRoleNotes] = useState<Record<string, string>>({});
 
   const load = useCallback(async () => {
+    if (!user) return;
     setLoading(true);
     try {
       const [jSnap, aSnap, hSnap] = await Promise.all([
         getDocs(collection(db, "volunteers")),
-        getDocs(collection(db, "volunteerApplications")),
-        getDocs(collection(db, "volunteerHourLogs")),
+        getDocs(isAdmin ? collection(db, "volunteerApplications") : query(collection(db, "volunteerApplications"), where("applicantId", "==", user.uid))),
+        getDocs(isAdmin ? collection(db, "volunteerHourLogs") : query(collection(db, "volunteerHourLogs"), where("userId", "==", user.uid))),
       ]);
       const list = jSnap.docs
         .map(d => ({ id: d.id, ...d.data() } as VolunteerJob & { id: string }))
@@ -73,7 +74,7 @@ export default function VolunteersPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [user, isAdmin]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -349,7 +350,7 @@ export default function VolunteersPage() {
             {filtered.map(job => {
               const meta = volunteerCategoryMeta(job.category);
               const app = appFor(job.id);
-              const hired = hiredCount(apps, job.id);
+              const hired = job.participantIds?.length ?? hiredCount(apps, job.id);
               const full = job.spots ? hired >= job.spots : false;
               const statusMeta = app ? volunteerAppStatusMeta(app.status) : null;
               return (

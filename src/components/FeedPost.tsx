@@ -8,6 +8,9 @@ import { Activity, PostComment } from "@/types";
 import { activityMeta, CAMPUS_LOCATIONS } from "@/lib/constants";
 import { Calendar, Heart, MapPin, MessageCircle, Pencil, Send, Trash2, Users } from "lucide-react";
 import Link from "next/link";
+import SafetyActions from "./SafetyActions";
+import { useAuth } from "@/context/AuthContext";
+import { contentAllowed } from "@/lib/safety";
 import { format } from "date-fns";
 import { notifyUser } from "@/lib/inbox";
 
@@ -32,6 +35,7 @@ export default function FeedPost({
   onDelete?: (a: Activity & { id: string }) => void;
   isAdmin?: boolean;
 }) {
+  const { profile } = useAuth();
   const a = activity;
   const meta = activityMeta(a.type);
   const joined = userId && a.participantIds?.includes(userId);
@@ -79,6 +83,7 @@ export default function FeedPost({
   const submitComment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!userId || !userName || !commentText.trim()) return;
+    if (!contentAllowed(commentText)) { window.alert("Please remove offensive language before posting."); return; }
     setSending(true);
     try {
       await addDoc(collection(db, "activities", a.id, "comments"), {
@@ -105,6 +110,7 @@ export default function FeedPost({
     }
   };
 
+  if ((a as any).hidden || profile?.blockedUsers?.includes(a.authorId)) return null;
   return (
     <article className="bg-white rounded-3xl shadow-lg overflow-hidden">
       <div className="px-5 pt-5 pb-2 flex items-center gap-3">
@@ -141,6 +147,7 @@ export default function FeedPost({
         )}
       </div>
       <div className="px-5 pb-4">
+        <SafetyActions userId={a.authorId} kind="post" targetId={a.id} />
         <h2 className="text-lg font-black text-gray-900 mb-2">{a.title}</h2>
         {a.description && (
           <p className="text-gray-600 text-sm leading-relaxed mb-3 whitespace-pre-wrap">{a.description}</p>
@@ -224,7 +231,7 @@ export default function FeedPost({
 
         {showComments && (
           <div className="mt-4 border-t border-gray-100 pt-3 space-y-3">
-            {comments.map(c => (
+            {comments.filter(c => !(c as any).hidden && !profile?.blockedUsers?.includes(c.authorId)).map(c => (
               <div key={c.id} className="flex gap-2">
                 <Link href={`/u/${c.authorId}`} className="shrink-0">
                   <img src={c.authorPhoto || "/bau-logo.svg"} alt="" className="w-8 h-8 rounded-full object-cover" />
@@ -234,6 +241,7 @@ export default function FeedPost({
                     {c.authorName}
                   </Link>
                   <p className="text-sm text-gray-700">{c.text}</p>
+                  <SafetyActions userId={c.authorId} kind="comment" targetId={c.id} postId={a.id} />
                 </div>
               </div>
             ))}

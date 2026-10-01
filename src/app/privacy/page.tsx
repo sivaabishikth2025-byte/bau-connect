@@ -24,7 +24,7 @@ export default function PrivacyPage() {
       <article className="max-w-3xl mx-auto px-4 py-10 sm:py-14 prose prose-slate">
         <p className="text-xs font-bold uppercase tracking-widest text-sky mb-3">Legal</p>
         <h1 className="text-3xl sm:text-4xl font-black text-primary mb-2">Privacy Policy</h1>
-        <p className="text-gray-500 text-sm mb-8">Last updated: September 16, 2026</p>
+        <p className="text-gray-500 text-sm mb-8">Last updated: September 30, 2026</p>
 
         <div className="space-y-8 text-gray-700 text-[15px] leading-relaxed">
           <section>
@@ -71,6 +71,15 @@ export default function PrivacyPage() {
                 actions, volunteer interest, and related timestamps.
               </li>
               <li>
+                <strong>Volunteer records:</strong> applications, contact phone number, availability,
+                experience, uploaded résumés, staff decisions, and hours you log. These records are
+                available to you and authorized campus staff.
+              </li>
+              <li>
+                <strong>Safety and deletion requests:</strong> reports you submit, blocking preferences,
+                account deletion requests, and staff review records.
+              </li>
+              <li>
                 <strong>Messages:</strong> direct messages you send to people you follow/connect with.
               </li>
               <li>
@@ -113,7 +122,7 @@ export default function PrivacyPage() {
               </li>
               <li>
                 <strong>Service providers:</strong> we use trusted processors such as Firebase
-                (authentication and database), Cloudinary (image hosting), email delivery providers,
+                (authentication and database), Cloudinary (photo and résumé hosting), email delivery providers,
                 hosting (for example Netlify), and map providers (for example Google Maps). They process
                 data on our behalf under their own privacy terms.
               </li>
@@ -136,10 +145,12 @@ export default function PrivacyPage() {
           <section>
             <h2 className="text-xl font-bold text-primary mb-2">7. Retention</h2>
             <p>
-              We keep your account and content while your account is active. If you delete your account
-              or request deletion, we remove or anonymize personal data within a reasonable period,
-              except where we must retain limited records for security, abuse prevention, or legal
-              reasons.
+              We keep your account and content while your account is active. You can request deletion
+              in Profile → Delete account, or at the linked deletion page. Authorized staff process
+              the request within 30 days and email confirmation after removing your account, associated
+              app records, and linked uploaded files. Contact techconnect@bau.edu if you need help or
+              have not received confirmation. Hosting providers may retain backup or security logs
+              according to their own retention policies.
             </p>
           </section>
 

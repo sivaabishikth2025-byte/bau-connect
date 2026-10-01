@@ -6,6 +6,7 @@ import { auth, db } from "@/lib/firebase";
 import { uploadToCloudinary } from "@/lib/cloudinary";
 import { useAuth } from "@/context/AuthContext";
 import { INTERESTS, OPEN_TO, APP_NAME } from "@/lib/constants";
+import { contentAllowed } from "@/lib/safety";
 import { X } from "lucide-react";
 
 const GENDERS = ["Man", "Woman", "Non-binary", "Other"];
@@ -48,6 +49,7 @@ export default function Onboarding() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    if (!contentAllowed(name + " " + bio)) return setError("Please remove offensive language from your name and bio.");
     if (photos.length === 0) return setError("Please add at least one photo.");
     if (!gender) return setError("Please select your gender.");
     if (interests.length < 3) return setError("Pick at least 3 interests.");

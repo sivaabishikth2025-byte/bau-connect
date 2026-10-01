@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import { doc, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { uploadToCloudinary } from "@/lib/cloudinary";
+import { contentAllowed } from "@/lib/safety";
 import { useAuth } from "@/context/AuthContext";
 import Navbar from "@/components/Navbar";
 import { Camera, Pencil, X, QrCode, Download, Plus } from "lucide-react";
@@ -63,6 +64,7 @@ export default function Profile() {
     if (!profile) return;
     setSaving(true);
     try {
+      if (!contentAllowed(bio)) { window.alert("Please remove offensive language from your bio."); return; }
       await updateDoc(doc(db, "users", profile.uid), { bio, major, interests, openTo });
       setEditing(false);
       setMsg("Profile updated!");
@@ -274,6 +276,7 @@ export default function Profile() {
         )}
       </div>
 
+      <div className="max-w-lg mx-auto px-4 py-4 flex gap-4 text-sm"><a href="/safety" className="text-primary underline">Safety & blocked users</a><a href="/delete-account" className="text-red-700 underline">Delete account</a></div>
       {/* QR Modal */}
       {showQR && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4">
