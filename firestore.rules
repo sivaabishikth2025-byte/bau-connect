@@ -61,7 +61,8 @@ service cloud.firestore {
     }
     match /likes/{id} {
       function valid(d) { return d.keys().hasOnly(['fromUserId','toUserId','createdAt']) && text(d.fromUserId,128) && text(d.toUserId,128) && d.createdAt is timestamp; }
-      allow read, delete: if campus() && request.auth.uid in [resource.data.fromUserId,resource.data.toUserId];
+      allow get, delete: if campus() && (resource.data.fromUserId == request.auth.uid || resource.data.toUserId == request.auth.uid);
+      allow list: if campus() && (resource.data.fromUserId == request.auth.uid || resource.data.toUserId == request.auth.uid);
       allow create: if meActive() && valid(request.resource.data) && request.resource.data.fromUserId == request.auth.uid && request.resource.data.toUserId != request.auth.uid && request.resource.data.createdAt == request.time && unblocked(request.auth.uid,request.resource.data.toUserId);
     }
     match /matches/{id} {
