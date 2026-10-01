@@ -10,12 +10,9 @@ export async function sendVerificationEmail() {
     headers: { Authorization: `Bearer ${idToken}` },
   });
 
-  const data = await res.json().catch(() => ({}));
   if (!res.ok) {
-    const raw = data.error || "Could not send verification email";
-    if (/unrecognised IP|authorized_ips/i.test(raw)) {
-      throw new Error("Email service is temporarily blocked. The site admin needs to disable Brevo IP restrictions.");
-    }
-    throw new Error(raw);
+    throw new Error(res.status === 429
+      ? "Please wait a few minutes before requesting another verification email."
+      : "We couldn't send your verification email right now. Please try again later.");
   }
 }

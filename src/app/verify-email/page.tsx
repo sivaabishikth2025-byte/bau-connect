@@ -37,14 +37,25 @@ export default function VerifyEmail() {
   const checkVerification = async () => {
     setChecking(true);
     setError("");
-    await reload(auth.currentUser!);
-    if (auth.currentUser?.emailVerified) {
-      router.replace("/");
-    } else {
-      setMsg("");
-      setError("Not verified yet. Check your inbox and spam folder, then try again.");
+    try {
+      const user = auth.currentUser;
+      if (!user) {
+        router.replace("/login");
+        return;
+      }
+      await reload(user);
+      if (auth.currentUser?.emailVerified) {
+        await auth.currentUser.getIdToken(true);
+        router.replace("/");
+      } else {
+        setMsg("");
+        setError("Not verified yet. Check your inbox and spam folder, then try again.");
+      }
+    } catch {
+      setError("We couldn't check your email verification right now. Please try again.");
+    } finally {
+      setChecking(false);
     }
-    setChecking(false);
   };
 
   const resend = async () => {
@@ -67,7 +78,7 @@ export default function VerifyEmail() {
         <div className="text-6xl mb-4">📧</div>
         <h1 className="text-2xl font-bold text-gray-900 mb-2">Verify your email</h1>
         <p className="text-gray-500 mb-2">
-          We sent a link to{" "}
+          Verify the email address{" "}
           <span className="font-semibold text-primary">{auth.currentUser?.email}</span>
         </p>
         <p className="text-gray-400 text-sm mb-2">
