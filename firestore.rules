@@ -61,12 +61,12 @@ service cloud.firestore {
     }
     match /likes/{id} {
       function valid(d) { return d.keys().hasOnly(['fromUserId','toUserId','createdAt']) && text(d.fromUserId,128) && text(d.toUserId,128) && d.createdAt is timestamp; }
-      allow get, delete: if campus() && (resource.data.fromUserId == request.auth.uid || resource.data.toUserId == request.auth.uid);
-      allow list: if campus() && (resource.data.fromUserId == request.auth.uid || resource.data.toUserId == request.auth.uid);
+      allow get, delete: if campus() && (resource.data.get('fromUserId','') == request.auth.uid || resource.data.get('toUserId','') == request.auth.uid);
+      allow list: if campus() && (resource.data.get('fromUserId','') == request.auth.uid || resource.data.get('toUserId','') == request.auth.uid);
       allow create: if meActive() && valid(request.resource.data) && request.resource.data.fromUserId == request.auth.uid && request.resource.data.toUserId != request.auth.uid && request.resource.data.createdAt == request.time && unblocked(request.auth.uid,request.resource.data.toUserId);
     }
     match /matches/{id} {
-      allow read, delete: if campus() && request.auth.uid in [resource.data.user1Id,resource.data.user2Id];
+      allow read, delete: if campus() && request.auth.uid in [resource.data.get('user1Id',''),resource.data.get('user2Id','')];
     }
     function participant(matchId) { let m = get(/databases/$(database)/documents/matches/$(matchId)).data; return campus() && request.auth.uid in [m.user1Id,m.user2Id]; }
     function canMessage(matchId) { let m = get(/databases/$(database)/documents/matches/$(matchId)).data; return participant(matchId) && unblocked(m.user1Id,m.user2Id); }

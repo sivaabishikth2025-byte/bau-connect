@@ -276,7 +276,16 @@ export default function Profile() {
         )}
       </div>
 
-      <div className="max-w-lg mx-auto px-4 py-4 flex gap-4 text-sm"><a href="/safety" className="text-primary underline">Safety & blocked users</a><a href="/delete-account" className="text-red-700 underline">Delete account</a></div>
+      <div className="max-w-lg mx-auto px-4 py-6 space-y-4">
+        <a href="/safety" className="text-primary underline text-sm">Safety & blocked users</a>
+        <section className="rounded-2xl border border-red-200 bg-red-50 p-4 flex items-center justify-between gap-4">
+          <div>
+            <h2 className="font-bold text-red-900">Account deletion</h2>
+            <p className="text-xs text-red-800/80 mt-1">Request permanent removal of your account and associated data.</p>
+          </div>
+          <a href="/delete-account" className="shrink-0 rounded-xl bg-red-700 px-4 py-2.5 text-sm font-bold text-white">Delete account</a>
+        </section>
+      </div>
       {/* QR Modal */}
       {showQR && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4">

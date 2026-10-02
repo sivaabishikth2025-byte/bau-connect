@@ -14,6 +14,7 @@ import {
 } from "@/lib/constants";
 import { Activity, UserProfile, VolunteerApplication, VolunteerAppStatus, VolunteerHourLog, VolunteerJob } from "@/types";
 import { notifyAllUsers, notifyUser } from "@/lib/inbox";
+import { safetyRequest } from "@/lib/safety";
 import { hiredCount, syncHiredRoster } from "@/lib/volunteer";
 import { downloadCsv } from "@/lib/csv";
 import {
@@ -53,6 +54,7 @@ export default function AdminPage() {
   const [alertTitle, setAlertTitle] = useState("");
   const [alertBody, setAlertBody] = useState("");
   const [adminNotes, setAdminNotes] = useState("");
+  const [announcementStatus, setAnnouncementStatus] = useState("");
 
   useEffect(() => {
     if (!loading && (!user || !isAdmin)) router.replace("/dashboard");
@@ -451,16 +453,23 @@ export default function AdminPage() {
           <form onSubmit={async e => {
             e.preventDefault();
             if (!user || !profile || !alertTitle.trim()) return;
+            setAnnouncementStatus("");
             setBusy(true);
             try {
-              await notifyAllUsers(user.uid, { type: "alert", title: alertTitle.trim(), body: alertBody.trim() || alertTitle.trim(), url: "/notifications", fromUserId: user.uid, fromName: profile.name });
+              const result = await safetyRequest("/api/admin/announcements", {
+                title: alertTitle.trim(), body: alertBody.trim() || alertTitle.trim(),
+              });
               setAlertTitle(""); setAlertBody("");
+              setAnnouncementStatus(`Announcement delivered to ${result.delivered} active users.`);
+            } catch (error) {
+              setAnnouncementStatus(error instanceof Error ? error.message : "Announcement failed. Please try again.");
             } finally { setBusy(false); }
           }} className="bg-white rounded-3xl p-5 space-y-3">
             <h2 className="font-black text-primary flex items-center gap-2"><Bell size={18} /> Campus announcement</h2>
             <input required value={alertTitle} onChange={e => setAlertTitle(e.target.value)} placeholder="Headline" className="w-full border border-gray-200 rounded-2xl px-4 py-3 text-sm" />
             <textarea value={alertBody} onChange={e => setAlertBody(e.target.value)} placeholder="Details" rows={4} className="w-full border border-gray-200 rounded-2xl px-4 py-3 text-sm resize-none" />
             <button type="submit" disabled={busy} className="w-full bg-primary text-white font-bold py-3 rounded-2xl">{busy ? "Sending..." : `Send to all ${APP_NAME} users`}</button>
+            {announcementStatus && <p role="status" className="text-sm text-gray-700">{announcementStatus}</p>}
           </form>
         )}
       </div>
