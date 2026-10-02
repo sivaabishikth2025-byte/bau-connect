@@ -45,6 +45,7 @@ function ConnectionsPage() {
   const [matches, setMatches] = useState<MatchWithUser[]>([]);
   const [requests, setRequests] = useState<LikeEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
   const [search, setSearch] = useState("");
   const [confirmId, setConfirmId] = useState<string | null>(null);
   const [removing, setRemoving] = useState<string | null>(null);
@@ -97,8 +98,15 @@ function ConnectionsPage() {
 
   const load = async () => {
     setLoading(true);
-    await Promise.all([loadConnected(), loadRequests()]);
-    setLoading(false);
+    setLoadError("");
+    try {
+      await Promise.all([loadConnected(), loadRequests()]);
+    } catch (error) {
+      console.error("Unable to load connections", error);
+      setLoadError("We couldn’t load your connections. Check your internet connection and try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => { load(); }, [user, myProfile]);
@@ -178,6 +186,13 @@ function ConnectionsPage() {
             </button>
           ))}
         </div>
+
+        {loadError && (
+          <div role="alert" className="mb-6 rounded-2xl border border-red-200/30 bg-red-950/40 p-4 text-sm text-white">
+            <p>{loadError}</p>
+            <button onClick={load} className="mt-3 rounded-xl bg-white px-4 py-2 font-bold text-primary">Try again</button>
+          </div>
+        )}
 
         {tab === "connected" && (
           <>

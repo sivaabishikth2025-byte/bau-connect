@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import BauLogo from "@/components/BauLogo";
 
@@ -24,6 +24,7 @@ function ClientParticles() {
 }
 
 export default function Landing() {
+  const [videoNeedsTap, setVideoNeedsTap] = useState(false);
   const parallaxRef = useRef<HTMLElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const videoWrapRef = useRef<HTMLDivElement>(null);
@@ -33,6 +34,30 @@ export default function Landing() {
   const phaseCenterRef = useRef<HTMLDivElement>(null);
   const progressRef = useRef<HTMLDivElement>(null);
   const phaseDotsRef = useRef<(HTMLDivElement | null)[]>([]);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    const section = parallaxRef.current;
+    if (!video || !section) return;
+    video.muted = true;
+
+    const play = () => {
+      if (document.visibilityState !== "visible") return;
+      void video.play().then(() => setVideoNeedsTap(false)).catch(() => setVideoNeedsTap(true));
+    };
+    const observer = new IntersectionObserver(entries => {
+      if (entries.some(entry => entry.isIntersecting)) play();
+      else video.pause();
+    }, { threshold: 0.05 });
+    observer.observe(section);
+    video.addEventListener("canplay", play);
+    document.addEventListener("visibilitychange", play);
+    return () => {
+      observer.disconnect();
+      video.removeEventListener("canplay", play);
+      document.removeEventListener("visibilitychange", play);
+    };
+  }, []);
 
   useEffect(() => {
     let raf = 0;
@@ -346,6 +371,19 @@ export default function Landing() {
                   }}
                 />
               </div>
+              {videoNeedsTap && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const video = videoRef.current;
+                    if (!video) return;
+                    video.muted = true;
+                    void video.play().then(() => setVideoNeedsTap(false)).catch(() => setVideoNeedsTap(true));
+                  }}
+                  className="absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/50 bg-primary/90 px-5 py-3 font-bold text-white shadow-lg"
+                >Play campus story
+                </button>
+              )}
               <div
                 ref={overlayRef}
                 style={{

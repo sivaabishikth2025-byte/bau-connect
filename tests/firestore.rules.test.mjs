@@ -13,6 +13,8 @@ beforeEach(async () => {
     const d = ctx.firestore();
     await Promise.all(['alice','bob','eve'].map(uid => setDoc(doc(d, 'users', uid), profile(uid))));
     await setDoc(doc(d,'matches','ab'), { user1Id:'alice', user2Id:'bob', createdAt:Timestamp.now() });
+    await setDoc(doc(d,'matches','ba'), { user1Id:'bob', user2Id:'alice', createdAt:Timestamp.now() });
+    await setDoc(doc(d,'likes','request'), { fromUserId:'bob', toUserId:'alice', createdAt:Timestamp.now() });
     await setDoc(doc(d,'messages','one'), { matchId:'ab', senderId:'alice', text:'hello', createdAt:Timestamp.now(), seenBy:['alice'] });
     await setDoc(doc(d,'volunteerApplications','application'), { jobId:'job', applicantId:'alice', applicantEmail:'alice@stu.bau.edu', phone:'123', availability:'weekdays', why:'Help campus', status:'applied', adminNotes:'', roleNotes:'', createdAt:Timestamp.now(), updatedAt:Timestamp.now() });
     await setDoc(doc(d,'volunteers','job'), { title:'Campus event', description:'Help out', organizerId:'staff', participantIds:[], status:'active', createdAt:Timestamp.now() });
@@ -25,6 +27,12 @@ test('messages readable only by participants, including queries', async () => {
   await assertFails(getDoc(doc(db('eve'),'messages','one')));
   await assertSucceeds(getDocs(query(collection(db('bob'),'messages'),where('matchId','==','ab'))));
   await assertFails(getDocs(query(collection(db('eve'),'messages'),where('matchId','==','ab'))));
+});
+test('connection page participant queries are permitted by the rules', async () => {
+  const matches = collection(db('alice'), 'matches');
+  await assertSucceeds(getDocs(query(matches, where('user1Id', '==', 'alice'))));
+  await assertSucceeds(getDocs(query(matches, where('user2Id', '==', 'alice'))));
+  await assertSucceeds(getDocs(query(collection(db('alice'), 'likes'), where('toUserId', '==', 'alice'))));
 });
 test('profile owner only, no field escalation', async () => {
   await assertFails(updateDoc(doc(db('eve'),'users','alice'),{bio:'Hijacked'}));
