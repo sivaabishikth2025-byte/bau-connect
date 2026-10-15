@@ -24,7 +24,7 @@ export default function TermsPage() {
       <article className="max-w-3xl mx-auto px-4 py-10 sm:py-14">
         <p className="text-xs font-bold uppercase tracking-widest text-sky mb-3">Legal</p>
         <h1 className="text-3xl sm:text-4xl font-black text-primary mb-2">Terms of Service</h1>
-        <p className="text-gray-500 text-sm mb-8">Last updated: September 16, 2026</p>
+        <p className="text-gray-500 text-sm mb-8">Last updated: October 14, 2026</p>
 
         <div className="space-y-8 text-gray-700 text-[15px] leading-relaxed">
           <section>
@@ -58,7 +58,13 @@ export default function TermsPage() {
           </section>
 
           <section id="safety">
-            <h2 className="text-xl font-bold text-primary mb-2">4. Acceptable use</h2>
+            <h2 className="text-xl font-bold text-primary mb-2">4. Acceptable use and zero tolerance</h2>
+            <p className="mb-3">
+              <strong>
+                BAU Connect has zero tolerance for objectionable content or abusive users.
+              </strong>{" "}
+              You must agree to these Terms before creating an account.
+            </p>
             <p>You agree not to:</p>
             <ul className="list-disc pl-5 space-y-2 mt-2">
               <li>Harass, threaten, stalk, or discriminate against others</li>
@@ -67,7 +73,15 @@ export default function TermsPage() {
               <li>Spam, scrape, or attempt to break or overload the service</li>
               <li>Share others’ private information without permission</li>
             </ul>
-            <p className="mt-3">We may remove content or suspend accounts that violate these rules.</p>
+            <p className="mt-3">
+              Every post, profile, comment, and message can be reported, and any user can be blocked.
+              Campus administrators review reports, remove objectionable content, and remove users who
+              post it or who harass or abuse others. Report concerns in the app or email{" "}
+              <a className="text-sky font-semibold" href="mailto:techconnect@bau.edu">
+                techconnect@bau.edu
+              </a>
+              .
+            </p>
           </section>
 
           <section>

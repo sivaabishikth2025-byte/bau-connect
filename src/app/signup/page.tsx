@@ -1,11 +1,12 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { sendVerificationEmail } from "@/lib/verificationEmail";
 import Link from "next/link";
 import BauLogo from "@/components/BauLogo";
+import { isNativeApp } from "@/lib/native";
 
 export default function Signup() {
   const router = useRouter();
@@ -14,8 +15,16 @@ export default function Signup() {
   const [confirm, setConfirm] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [agreed, setAgreed] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [native, setNative] = useState(false);
+
+  useEffect(() => {
+    setNative(isNativeApp());
+  }, []);
+
+  const legalLinkProps = native ? {} : { target: "_blank", rel: "noopener noreferrer" };
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,6 +33,7 @@ export default function Signup() {
     if (!allowed) return setError("Only @stu.bau.edu or @bau.edu emails are allowed.");
     if (password.length < 6) return setError("Password must be at least 6 characters.");
     if (password !== confirm) return setError("Passwords don't match.");
+    if (!agreed) return setError("Please agree to the Terms of Service and Privacy Policy to continue.");
     setLoading(true);
     try {
       await createUserWithEmailAndPassword(auth, email, password);
@@ -161,12 +171,29 @@ export default function Signup() {
             </div>
           </div>
 
+          {/* Terms agreement */}
+          <label className="flex items-start gap-2.5 text-xs text-gray-600 leading-relaxed cursor-pointer">
+            <input
+              type="checkbox"
+              checked={agreed}
+              onChange={e => setAgreed(e.target.checked)}
+              className="mt-0.5 w-4 h-4 shrink-0 accent-[#1C2D5A]"
+            />
+            <span>
+              I agree to the{" "}
+              <Link href="/terms" {...legalLinkProps} className="text-sky font-semibold underline">Terms of Service</Link>
+              {" "}and{" "}
+              <Link href="/privacy" {...legalLinkProps} className="text-sky font-semibold underline">Privacy Policy</Link>
+              . BAU Connect has zero tolerance for objectionable content or abusive users.
+            </span>
+          </label>
+
           {error && <p className="text-red-500 text-sm">{error}</p>}
 
           {/* Submit */}
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || !agreed}
             className="w-full py-3 rounded-2xl font-black text-white text-base transition disabled:opacity-60"
             style={{ background: "linear-gradient(to right, #F15B47, #DBA631)" }}
           >
